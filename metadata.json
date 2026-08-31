@@ -1,0 +1,6 @@
+{
+  "name": "Вайбатон — Платформа соревнований",
+  "description": "Платформа для проведения живых онлайн-хакатонов и Вайбатонов с AI Host, Devlog, live activity и судейством.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

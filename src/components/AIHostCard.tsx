@@ -1,0 +1,199 @@
+import React, { useState } from "react";
+import { useHackathon } from "../context/HackathonContext";
+import { 
+  Bot, 
+  Volume2, 
+  VolumeX, 
+  Sparkles, 
+  RefreshCw, 
+  MessageSquare, 
+  Radio, 
+  ShieldCheck, 
+  Zap,
+  Play,
+  Pause
+} from "lucide-react";
+import { speakText, stopSpeech } from "../utils/audio";
+
+interface AIHostCardProps {
+  onOpenAskHost: () => void;
+}
+
+export const AIHostCard: React.FC<AIHostCardProps> = ({ onOpenAskHost }) => {
+  const { aiMessages, triggerAIHostBroadcast, hackathon, posts, teams, projects, users } = useHackathon();
+
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const latestMessage = aiMessages[0] || {
+    id: "default-host",
+    title: "В ЭФИРЕ AI HOST ВАЙБАТОНА",
+    content: "Вайбатон №2 в самом разгаре. 7 дней на разработку. Делитесь обновлениями в Devlog, создавайте команды и показывайте первые MVP!",
+    statsSnapshot: {
+      participants: users.length,
+      teams: teams.length,
+      projects: projects.length,
+      mvps: projects.filter(p => p.status === "MVP" || p.status === "DEMO").length,
+      submissions: 0,
+      progressPosts: posts.length,
+      hoursLeft: 108
+    },
+    createdAt: new Date().toISOString()
+  };
+
+  const handleToggleVoice = () => {
+    if (isSpeaking) {
+      stopSpeech();
+      setIsSpeaking(false);
+    } else {
+      setIsSpeaking(true);
+      speakText(`${latestMessage.title}. ${latestMessage.content}`, () => {
+        setIsSpeaking(false);
+      });
+    }
+  };
+
+  const handleRefreshBroadcast = async () => {
+    try {
+      setIsGenerating(true);
+      await triggerAIHostBroadcast("Запрос обновления ведущего");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl bg-[#0A0A0A] border border-[#333] p-6 sm:p-8 shadow-2xl mb-8">
+      {/* Holographic Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#262626]">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-2xl bg-[#151515] border border-[#BAFF00]/50 p-0.5 shadow-[0_0_15px_rgba(186,255,0,0.2)] animate-pulse-acid">
+              <div className="w-full h-full bg-black rounded-[13px] flex items-center justify-center text-[#BAFF00]">
+                <Bot className="w-6 h-6" />
+              </div>
+            </div>
+            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#BAFF00] ring-4 ring-black animate-ping" />
+            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#BAFF00] ring-4 ring-black" />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 font-mono">
+              <span className="text-xs font-bold tracking-widest text-[#BAFF00] uppercase">
+                OFFICIAL AI HOST // ON AIR
+              </span>
+              <span className="px-2 py-0.2 rounded text-[9px] font-mono bg-[#BAFF00]/10 text-[#BAFF00] border border-[#BAFF00]/30">
+                LIVE_NODE
+              </span>
+            </div>
+            <h2 className="text-base sm:text-lg font-black text-white font-mono tracking-wider uppercase mt-0.5">
+              {latestMessage.title}
+            </h2>
+          </div>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex items-center gap-2 font-mono text-xs">
+          <button
+            onClick={handleToggleVoice}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold font-mono tracking-wider uppercase flex items-center gap-2 transition-all ${
+              isSpeaking
+                ? "bg-[#BAFF00] text-black shadow-[0_0_12px_rgba(186,255,0,0.4)] animate-pulse"
+                : "bg-[#151515] hover:bg-[#202020] text-white border border-[#333] hover:border-[#BAFF00]"
+            }`}
+          >
+            {isSpeaking ? <Pause className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-[#BAFF00]" />}
+            <span>{isSpeaking ? "Остановить голос" : "Послушать Host"}</span>
+          </button>
+
+          <button
+            onClick={onOpenAskHost}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold font-mono tracking-wider uppercase bg-[#151515] hover:bg-[#202020] text-[#BAFF00] border border-[#333] hover:border-[#BAFF00] flex items-center gap-1.5 transition-all"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Спросить Host</span>
+          </button>
+
+          <button
+            onClick={handleRefreshBroadcast}
+            disabled={isGenerating}
+            title="Сгенерировать свежую сводку ведущего на основе актуальных данных"
+            className="p-2 rounded-xl bg-[#151515] hover:bg-[#222] text-[#888] hover:text-[#BAFF00] border border-[#333] hover:border-[#BAFF00] transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isGenerating ? "animate-spin text-[#BAFF00]" : ""}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Main Broadcast Body */}
+      <div className="my-5 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <div className="lg:col-span-8">
+          <div className="bg-[#111] rounded-2xl p-5 border border-[#262626] relative">
+            {/* Animated Equalizer Waveform when speaking */}
+            {isSpeaking && (
+              <div className="flex items-center gap-1 mb-3">
+                {[40, 70, 30, 90, 50, 80, 60, 100, 45, 85].map((h, i) => (
+                  <div 
+                    key={i} 
+                    className="w-1.5 bg-[#BAFF00] rounded-none animate-pulse" 
+                    style={{ height: `${h * 0.25}px`, animationDelay: `${i * 0.1}s` }} 
+                  />
+                ))}
+                <span className="text-[11px] font-mono text-[#BAFF00] ml-2 uppercase tracking-wider">Голосовой синтез активен...</span>
+              </div>
+            )}
+
+            <p className="text-sm sm:text-base text-[#E0E0E0] font-mono leading-relaxed whitespace-pre-line">
+              {latestMessage.content}
+            </p>
+
+            <div className="mt-4 pt-3 border-t border-[#222] flex flex-wrap items-center justify-between text-[11px] text-[#888] font-mono gap-2">
+              <div className="flex items-center gap-2">
+                <Radio className="w-3.5 h-3.5 text-[#BAFF00] animate-pulse" />
+                <span>Сформировано Gemini AI на основе реального пульса события</span>
+              </div>
+              <div className="text-[#AAA]">
+                {new Date(latestMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Event Snapshot Card */}
+        <div className="lg:col-span-4 bg-[#111] border border-[#262626] rounded-2xl p-4 space-y-3 font-mono">
+          <div className="text-[11px] text-[#BAFF00] uppercase tracking-wider flex items-center justify-between">
+            <span>ПУЛЬС СОБЫТИЯ</span>
+            <Zap className="w-3.5 h-3.5 text-[#BAFF00]" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-center">
+            <div className="bg-[#151515] p-2.5 rounded-xl border border-[#222]">
+              <div className="text-xl font-bold font-mono text-white">{latestMessage.statsSnapshot?.participants || users.length}</div>
+              <div className="text-[10px] text-[#888] uppercase font-mono">Участников</div>
+            </div>
+            <div className="bg-[#151515] p-2.5 rounded-xl border border-[#222]">
+              <div className="text-xl font-bold font-mono text-[#BAFF00]">{latestMessage.statsSnapshot?.teams || teams.length}</div>
+              <div className="text-[10px] text-[#888] uppercase font-mono">Команд</div>
+            </div>
+            <div className="bg-[#151515] p-2.5 rounded-xl border border-[#222]">
+              <div className="text-xl font-bold font-mono text-cyan-400">{latestMessage.statsSnapshot?.mvps || 1}</div>
+              <div className="text-[10px] text-[#888] uppercase font-mono">Рабочих MVP</div>
+            </div>
+            <div className="bg-[#151515] p-2.5 rounded-xl border border-[#222]">
+              <div className="text-xl font-bold font-mono text-[#BAFF00]">{latestMessage.statsSnapshot?.progressPosts || posts.length}</div>
+              <div className="text-[10px] text-[#888] uppercase font-mono">Devlog постов</div>
+            </div>
+          </div>
+
+          {/* Strict Role Disclaimer */}
+          <div className="text-[10px] text-[#888] bg-[#0c0c0c] p-2.5 rounded-xl border border-[#222] flex items-start gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#BAFF00] shrink-0 mt-0.5" />
+            <span>AI Host комментирует эфир и помогает участникам. Решения принимают только судьи-люди.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
