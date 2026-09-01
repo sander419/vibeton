@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useHackathon } from "../context/HackathonContext";
+import { NotificationCenter } from "./NotificationCenter";
 import {
   Volume2,
   VolumeX,
   User as UserIcon,
+  UserCheck,
   Shield,
   Award,
   Sparkles,
@@ -16,7 +18,10 @@ import {
   Maximize2,
   ChevronDown,
   Check,
-  MessageSquare
+  MessageSquare,
+  Terminal,
+  Sun,
+  Moon
 } from "lucide-react";
 
 interface HeaderProps {
@@ -25,6 +30,7 @@ interface HeaderProps {
   onOpenFastDevlog: () => void;
   onOpenRegister: () => void;
   onOpenObserverMode?: () => void;
+  onOpenSubmission?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -32,7 +38,8 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   onOpenFastDevlog,
   onOpenRegister,
-  onOpenObserverMode
+  onOpenObserverMode,
+  onOpenSubmission
 }) => {
   const {
     hackathon,
@@ -44,6 +51,9 @@ export const Header: React.FC<HeaderProps> = ({
     switchActiveUser,
     soundEnabled,
     toggleSound,
+    theme,
+    toggleTheme,
+    setTheme,
     sseConnected,
     resetDemoSeed
   } = useHackathon();
@@ -53,6 +63,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const navItems = [
     { id: "live", label: "Главная", icon: Zap },
+    { id: "my-dashboard", label: "Мой дашборд", icon: UserCheck },
     { id: "discovery", label: "События", icon: Layers },
     { id: "duel", label: "1v1 Дуэль", icon: Swords },
     { id: "leaderboard", label: "Таблица", icon: Trophy },
@@ -67,32 +78,32 @@ export const Header: React.FC<HeaderProps> = ({
     switch (stage) {
       case "ACTIVE":
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-white bg-[#E63946] border border-[#1A1A1A]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-white bg-[#2563EB] border border-[#111113]">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
             [LIVE]
           </span>
         );
       case "SUBMISSION":
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#1A1A1A] bg-[#EFECE6] border border-[#1A1A1A]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#111113] bg-[#EFECE6] border border-[#111113]">
             [ПРИЁМ]
           </span>
         );
       case "JUDGING":
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-white bg-[#0F4C81] border border-[#1A1A1A]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-white bg-[#111113] border border-[#111113]">
             [СУДЕЙСТВО]
           </span>
         );
       case "RESULTS":
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#1A1A1A] bg-[#EFECE6] border border-[#1A1A1A]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#111113] bg-[#EFECE6] border border-[#111113]">
             [ИТОГИ]
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#666] bg-[#EFECE6] border border-[#1A1A1A]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#666] bg-[#EFECE6] border border-[#111113]">
             [{stage || "READY"}]
           </span>
         );
@@ -102,31 +113,54 @@ export const Header: React.FC<HeaderProps> = ({
   const currentEvent = eventsList.find((e) => e.id === activeEventId) || hackathon;
 
   return (
-    <header className="sticky top-0 z-40 bg-[#F8F7F4] border-b-2 border-[#1A1A1A] font-mono">
+    <header className="sticky top-8 sm:top-9 z-40 bg-[#F8F7F4] border-b-2 border-[#111113] font-mono">
       {/* Top Telemetry Ticker Bar */}
-      <div className="bg-[#EFECE6] border-b border-[#1A1A1A] px-4 sm:px-8 py-1.5 text-xs text-[#1A1A1A] font-mono flex items-center justify-between">
+      <div className="bg-[#EFECE6] border-b border-[#111113] px-4 sm:px-8 py-1.5 text-xs text-[#111113] font-mono flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="label text-[#1A1A1A] font-bold">
-            [01] SYSTEM
+          <div className="tag-box py-0.5 px-2 bg-[#111113] text-white">
+            ARENA_v2
           </div>
           <span className="text-[#999]">|</span>
-          <div className="font-bold tracking-wider text-xs text-[#1A1A1A]">
-            COMPETITION_OS // INDUSTRIAL_EDITION
+          <div className="font-bold tracking-wider text-xs text-[#111113]">
+            GALACTIC_ARENA // EVENT_ENGINE [X] // AI_HOST [X]
           </div>
           <span className="text-[#999] hidden sm:inline">|</span>
-          <span className="text-[#666] text-[11px] hidden md:inline">
-            Event Engine • AI Host • 1v1 Arena • Observer Mode
+          <span className="text-[#555] text-[11px] hidden md:inline">
+            1v1 Cyber Arena • Realtime Observer • Devlog Sync
           </span>
-          <span className="hidden lg:inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-[#FFFFFF] text-[#1A1A1A] border border-[#1A1A1A] font-bold">
-            {sseConnected ? "● REALTIME_SYNC" : "○ SYNC_OFFLINE"}
+          <span className="hidden lg:inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-[#FFFFFF] text-[#2563EB] border border-[#111113] font-bold">
+            {sseConnected ? "● REALTIME_SYNC 12ms" : "○ SYNC_OFFLINE"}
           </span>
         </div>
 
         <div className="flex items-center gap-2 text-[11px]">
+          {/* Global Theme Toggle in Telemetry Bar */}
+          <button
+            onClick={toggleTheme}
+            title={theme === "terminal-dark" ? "Переключить на светлую тему (Default Light)" : "Переключить на тему Terminal Dark"}
+            className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase transition-all border border-[#111113] ${
+              theme === "terminal-dark"
+                ? "bg-[#BAFF00] text-[#090A0D] border-[#BAFF00] shadow-[0_0_8px_rgba(186,255,0,0.3)]"
+                : "bg-[#FFFFFF] text-[#111113] hover:bg-[#111113] hover:text-[#F8F7F4]"
+            }`}
+          >
+            {theme === "terminal-dark" ? (
+              <>
+                <Terminal className="w-3 h-3 text-[#090A0D]" />
+                <span>TERMINAL_DARK</span>
+              </>
+            ) : (
+              <>
+                <Sun className="w-3 h-3 text-amber-600" />
+                <span>LIGHT_MODE</span>
+              </>
+            )}
+          </button>
+
           <button
             onClick={resetDemoSeed}
             title="Сбросить демо-данные"
-            className="text-[10px] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-[#F8F7F4] flex items-center gap-1 px-2 py-0.5 bg-[#FFFFFF] border border-[#1A1A1A] transition-colors font-bold uppercase tracking-wider"
+            className="text-[10px] text-[#111113] hover:bg-[#111113] hover:text-[#F8F7F4] flex items-center gap-1 px-2 py-0.5 bg-[#FFFFFF] border border-[#111113] transition-colors font-bold uppercase tracking-wider"
           >
             <RotateCcw className="w-3 h-3" />
             <span>Reset</span>
@@ -134,14 +168,14 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={toggleSound}
-            className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase transition-colors border border-[#1A1A1A] ${
+            className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase transition-colors border border-[#111113] ${
               soundEnabled
-                ? "bg-[#1A1A1A] text-[#F8F7F4]"
-                : "bg-[#FFFFFF] text-[#666] hover:text-[#1A1A1A]"
+                ? "bg-[#2563EB] text-white"
+                : "bg-[#FFFFFF] text-[#666] hover:text-[#111113]"
             }`}
             title="Синтез речи AI Host"
           >
-            {soundEnabled ? <Volume2 className="w-3 h-3 text-[#E63946]" /> : <VolumeX className="w-3 h-3" />}
+            {soundEnabled ? <Volume2 className="w-3 h-3 text-white" /> : <VolumeX className="w-3 h-3" />}
             <span className="hidden sm:inline">{soundEnabled ? "AI_AUDIO: ON" : "AI_AUDIO: OFF"}</span>
           </button>
         </div>
@@ -156,8 +190,8 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab("live")}
               className="cursor-pointer flex items-center gap-2 group select-none"
             >
-              <div className="font-display font-bold text-2xl tracking-tight text-[#1A1A1A] uppercase">
-                COMPETITION<span className="text-[#E63946]">_OS</span>
+              <div className="font-display font-bold text-2xl tracking-tight text-[#111113] uppercase">
+                ARENA<span className="text-[#2563EB]">_v2</span>
               </div>
             </div>
 
@@ -165,11 +199,11 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="relative">
               <button
                 onClick={() => setShowEventMenu(!showEventMenu)}
-                className="flex items-center gap-2 px-3 py-1 bg-[#FFFFFF] hover:bg-[#EFECE6] border-1.5 border-[#1A1A1A] text-xs font-mono transition-colors text-left shadow-[2px_2px_0px_#1A1A1A]"
+                className="flex items-center gap-2 px-3 py-1 bg-[#FFFFFF] hover:bg-[#EFECE6] border border-[#111113] text-xs font-mono transition-colors text-left"
               >
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-[#1A1A1A] uppercase truncate max-w-[130px] sm:max-w-[180px]">
+                    <span className="font-bold text-[#111113] uppercase truncate max-w-[130px] sm:max-w-[180px]">
                       {currentEvent?.title || "Вайбатон №2"}
                     </span>
                     {getStageBadge(currentEvent?.stage)}
@@ -182,13 +216,13 @@ export const Header: React.FC<HeaderProps> = ({
                       : "Vibeathon Classic"}
                   </span>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-[#1A1A1A]" />
+                <ChevronDown className="w-3.5 h-3.5 text-[#111113]" />
               </button>
 
               {/* Event Switcher Dropdown */}
               {showEventMenu && (
-                <div className="absolute left-0 mt-2 w-80 bg-[#FFFFFF] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-2 z-50 font-mono">
-                  <div className="px-3 py-2 border-b border-[#1A1A1A] flex items-center justify-between mb-1">
+                <div className="absolute left-0 mt-2 w-80 bg-[#FFFFFF] border-2 border-[#111113] shadow-[4px_4px_0px_#111113] p-2 z-50 font-mono">
+                  <div className="px-3 py-2 border-b border-[#111113] flex items-center justify-between mb-1">
                     <span className="text-[10px] text-[#666] uppercase font-bold tracking-wider">
                       [ТУРНИРЫ]
                     </span>
@@ -197,7 +231,7 @@ export const Header: React.FC<HeaderProps> = ({
                         setActiveTab("discovery");
                         setShowEventMenu(false);
                       }}
-                      className="text-[10px] text-[#E63946] font-bold hover:underline uppercase"
+                      className="text-[10px] text-[#2563EB] font-bold hover:underline uppercase"
                     >
                       Каталог →
                     </button>
@@ -215,31 +249,31 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs transition-colors border ${
                             isSel
-                              ? "bg-[#1A1A1A] text-[#F8F7F4] border-[#1A1A1A]"
-                              : "text-[#1A1A1A] border-transparent hover:bg-[#EFECE6]"
+                              ? "bg-[#2563EB] text-white border-[#111113]"
+                              : "text-[#111113] border-transparent hover:bg-[#EFECE6]"
                           }`}
                         >
                           <div className="min-w-0 pr-2">
                             <div className="font-bold uppercase truncate">{ev.title}</div>
-                            <div className="text-[10px] text-[#666] flex items-center gap-1.5 mt-0.5">
-                              <span className="uppercase text-[#E63946] font-bold">{ev.templateType}</span>
+                            <div className="text-[10px] opacity-80 flex items-center gap-1.5 mt-0.5">
+                              <span className="uppercase font-bold">{ev.templateType}</span>
                               <span>•</span>
                               <span>{ev.stage}</span>
                             </div>
                           </div>
-                          {isSel && <Check className="w-4 h-4 text-[#E63946] flex-shrink-0" />}
+                          {isSel && <Check className="w-4 h-4 text-white flex-shrink-0" />}
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="pt-2 border-t border-[#1A1A1A] mt-1">
+                  <div className="pt-2 border-t border-[#111113] mt-1">
                     <button
                       onClick={() => {
                         setActiveTab("discovery");
                         setShowEventMenu(false);
                       }}
-                      className="w-full py-1.5 px-3 text-xs font-bold bg-[#1A1A1A] hover:bg-[#E63946] text-[#F8F7F4] hover:text-white flex items-center justify-center gap-1.5 transition-colors uppercase font-mono"
+                      className="w-full py-1.5 px-3 text-xs font-bold bg-[#111113] hover:bg-[#2563EB] text-white flex items-center justify-center gap-1.5 transition-colors uppercase font-mono"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Каталог форматов</span>
@@ -259,10 +293,10 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold font-mono tracking-wider transition-colors uppercase whitespace-nowrap border-1.5 ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold font-mono tracking-wider transition-colors uppercase whitespace-nowrap border ${
                     isActive
-                      ? "bg-[#1A1A1A] text-[#F8F7F4] border-[#1A1A1A] shadow-[2px_2px_0px_#E63946]"
-                      : "bg-transparent text-[#1A1A1A] border-transparent hover:border-[#1A1A1A] hover:bg-[#EFECE6]"
+                      ? "bg-[#2563EB] text-white border-[#111113]"
+                      : "bg-transparent text-[#111113] border-transparent hover:border-[#111113] hover:bg-[#EFECE6]"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -272,24 +306,54 @@ export const Header: React.FC<HeaderProps> = ({
             })}
           </nav>
 
-          {/* Right Actions: Devlog CTA, Observer, Profile */}
+          {/* Right Actions: Devlog CTA, Notifications, Observer, Profile */}
           <div className="flex items-center gap-2">
+            {/* Notification Center */}
+            <NotificationCenter
+              onNavigateToTab={setActiveTab}
+              onOpenSubmission={onOpenSubmission}
+              onOpenDevlog={onOpenFastDevlog}
+            />
+
             {/* Observer Mode CTA */}
             {onOpenObserverMode && (
               <button
                 onClick={onOpenObserverMode}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FFFFFF] hover:bg-[#1A1A1A] hover:text-[#F8F7F4] text-[#1A1A1A] border-1.5 border-[#1A1A1A] text-xs font-mono font-bold uppercase transition-colors shadow-[2px_2px_0px_#1A1A1A]"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FFFFFF] hover:bg-[#111113] hover:text-[#F8F7F4] text-[#111113] border border-[#111113] text-xs font-mono font-bold uppercase transition-colors"
                 title="Режим прямого эфира / полноэкранный стрим"
               >
-                <Maximize2 className="w-3.5 h-3.5 text-[#E63946]" />
+                <Maximize2 className="w-3.5 h-3.5 text-[#2563EB]" />
                 <span className="hidden xl:inline">OBSERVER</span>
               </button>
             )}
 
+            {/* Global Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-mono font-bold uppercase transition-all border border-[#111113] ${
+                theme === "terminal-dark"
+                  ? "bg-[#BAFF00] text-[#090A0D] border-[#BAFF00] shadow-[2px_2px_0px_#000000]"
+                  : "bg-[#FFFFFF] text-[#111113] hover:bg-[#EFECE6] shadow-[2px_2px_0px_#111113]"
+              }`}
+              title={`Текущая тема: ${theme === 'terminal-dark' ? 'Terminal Dark' : 'Default Light'}. Нажмите для переключения.`}
+            >
+              {theme === "terminal-dark" ? (
+                <>
+                  <Terminal className="w-3.5 h-3.5 text-[#090A0D]" />
+                  <span className="hidden md:inline">TERMINAL</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="hidden md:inline">LIGHT</span>
+                </>
+              )}
+            </button>
+
             {/* Quick Devlog Button */}
             <button
               onClick={onOpenFastDevlog}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#E63946] hover:bg-[#D02B38] text-white font-mono font-bold text-xs uppercase border-1.5 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] transition-transform active:translate-x-0.5 active:translate-y-0.5"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#111113] hover:bg-[#2563EB] text-white font-mono font-bold text-xs uppercase border border-[#111113] transition-all"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">+ DEVLOG</span>
@@ -299,46 +363,64 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1 bg-[#FFFFFF] hover:bg-[#EFECE6] border-1.5 border-[#1A1A1A] transition-colors text-xs font-mono shadow-[2px_2px_0px_#1A1A1A]"
+                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1 bg-[#FFFFFF] hover:bg-[#EFECE6] border border-[#111113] transition-colors text-xs font-mono"
               >
                 {(currentUser?.avatar || currentUser?.avatarUrl) ? (
                   <img
                     src={currentUser?.avatar || currentUser?.avatarUrl}
                     alt={currentUser?.name || "User"}
-                    className="w-6 h-6 object-cover border border-[#1A1A1A]"
+                    className="w-6 h-6 object-cover border border-[#111113]"
                   />
                 ) : (
-                  <div className="w-6 h-6 bg-[#1A1A1A] text-[#F8F7F4] flex items-center justify-center font-bold text-xs">
+                  <div className="w-6 h-6 bg-[#111113] text-[#F8F7F4] flex items-center justify-center font-bold text-xs">
                     {currentUser?.name?.charAt(0) || "U"}
                   </div>
                 )}
                 <div className="hidden sm:flex flex-col text-left">
-                  <span className="text-[#1A1A1A] font-bold truncate max-w-[90px]">
+                  <span className="text-[#111113] font-bold truncate max-w-[90px]">
                     {currentUser?.name || "Гость"}
                   </span>
                   <span className="text-[10px] text-[#666] font-mono -mt-0.5">
                     {currentUser?.role || "Наблюдатель"}
                   </span>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-[#1A1A1A]" />
+                <ChevronDown className="w-3.5 h-3.5 text-[#111113]" />
               </button>
 
               {/* User Dropdown with Quick Demo Roles */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-72 bg-[#FFFFFF] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-2 z-50 font-mono">
-                  <div className="px-3 py-2 border-b border-[#1A1A1A] flex items-center justify-between mb-1">
+                <div className="absolute right-0 mt-2 w-72 bg-[#FFFFFF] border-2 border-[#111113] shadow-[4px_4px_0px_#111113] p-2 z-50 font-mono">
+                  <div className="px-3 py-2 border-b border-[#111113] flex items-center justify-between mb-1">
                     <span className="text-[10px] text-[#666] uppercase font-bold tracking-wider">
-                      [ДЕМО-РОЛИ]
+                      [ПРОФИЛЬ УЧАСТНИКА]
                     </span>
                     <button
                       onClick={() => {
                         onOpenRegister();
                         setShowUserMenu(false);
                       }}
-                      className="text-[10px] text-[#E63946] font-bold hover:underline uppercase"
+                      className="text-[10px] text-[#2563EB] font-bold hover:underline uppercase"
                     >
                       + Регистрация
                     </button>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setActiveTab("my-dashboard");
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2 text-left text-xs bg-[#F8F7F4] hover:bg-[#2563EB] hover:text-white border border-[#111113] transition-colors mb-2 font-bold uppercase"
+                  >
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>Открыть Мой дашборд</span>
+                    </div>
+                    <span className="text-[10px]">→</span>
+                  </button>
+
+                  <div className="px-2 py-1 text-[9px] text-[#666] uppercase font-bold tracking-wider">
+                    [СМЕНИТЬ ДЕМО-ПОЛЬЗОВАТЕЛЯ]:
                   </div>
 
                   <div className="space-y-1">
@@ -353,8 +435,8 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs transition-colors border ${
                             isCurrent
-                              ? "bg-[#1A1A1A] text-[#F8F7F4] border-[#1A1A1A]"
-                              : "text-[#1A1A1A] border-transparent hover:bg-[#EFECE6]"
+                              ? "bg-[#2563EB] text-white border-[#111113]"
+                              : "text-[#111113] border-transparent hover:bg-[#EFECE6]"
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -362,22 +444,60 @@ export const Header: React.FC<HeaderProps> = ({
                               <img
                                 src={u.avatar || u.avatarUrl}
                                 alt={u.name || "User"}
-                                className="w-6 h-6 object-cover border border-[#1A1A1A]"
+                                className="w-6 h-6 object-cover border border-[#111113]"
                               />
                             ) : (
-                              <div className="w-6 h-6 bg-[#1A1A1A] text-[#F8F7F4] flex items-center justify-center font-bold text-[10px]">
+                              <div className="w-6 h-6 bg-[#111113] text-[#F8F7F4] flex items-center justify-center font-bold text-[10px]">
                                 {u.name?.charAt(0) || "U"}
                               </div>
                             )}
                             <div className="min-w-0">
                               <div className="font-bold truncate">{u.name || "Участник"}</div>
-                              <div className="text-[10px] text-[#666]">{u.role || "participant"}</div>
+                              <div className="text-[10px] opacity-80">{u.role || "participant"}</div>
                             </div>
                           </div>
-                          {isCurrent && <Check className="w-4 h-4 text-[#E63946] flex-shrink-0" />}
+                          {isCurrent && <Check className="w-4 h-4 text-white flex-shrink-0" />}
                         </button>
                       );
                     })}
+                  </div>
+
+                  {/* Theme Switcher in User Dropdown */}
+                  <div className="pt-2 border-t border-[#111113] mt-2">
+                    <div className="px-2 py-1 text-[9px] text-[#666] uppercase font-bold tracking-wider mb-1">
+                      [ТЕМА ОФОРМЛЕНИЯ / THEME]:
+                    </div>
+                    <div className="grid grid-cols-2 gap-1">
+                      <button
+                        onClick={() => setTheme("light")}
+                        className={`px-2 py-1.5 text-left text-[10px] font-bold uppercase transition-all flex items-center justify-between border ${
+                          theme === "light"
+                            ? "bg-[#2563EB] text-white border-[#111113]"
+                            : "bg-[#F8F7F4] text-[#111113] border-transparent hover:bg-[#EFECE6]"
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Sun className="w-3 h-3 text-amber-500" />
+                          <span>LIGHT</span>
+                        </span>
+                        {theme === "light" && <Check className="w-3 h-3 text-white" />}
+                      </button>
+
+                      <button
+                        onClick={() => setTheme("terminal-dark")}
+                        className={`px-2 py-1.5 text-left text-[10px] font-bold uppercase transition-all flex items-center justify-between border ${
+                          theme === "terminal-dark"
+                            ? "bg-[#BAFF00] text-[#090A0D] border-[#BAFF00] shadow-[0_0_8px_rgba(186,255,0,0.3)]"
+                            : "bg-[#F8F7F4] text-[#111113] border-transparent hover:bg-[#EFECE6]"
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Terminal className="w-3 h-3 text-[#BAFF00]" />
+                          <span>TERMINAL</span>
+                        </span>
+                        {theme === "terminal-dark" && <Check className="w-3 h-3 text-[#090A0D]" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

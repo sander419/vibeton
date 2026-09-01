@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { HackathonProvider, useHackathon } from "./context/HackathonContext";
 import { Header } from "./components/Header";
 import { LiveStageDashboard } from "./components/LiveStageDashboard";
@@ -12,6 +13,8 @@ import { LiveChatView } from "./components/LiveChatView";
 import { JudgeDashboard } from "./components/JudgeDashboard";
 import { OrganizerDashboard } from "./components/OrganizerDashboard";
 import { Leaderboard } from "./components/Leaderboard";
+import { ParticipantDashboard } from "./components/ParticipantDashboard";
+import { LiveEventTicker } from "./components/LiveEventTicker";
 import { AskHostModal } from "./components/AskHostModal";
 import { SubmissionModal } from "./components/SubmissionModal";
 import { RegisterModal } from "./components/RegisterModal";
@@ -31,7 +34,14 @@ const MainAppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F7F4] text-[#1A1A1A] font-mono flex flex-col selection:bg-[#E63946] selection:text-white">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)] font-mono flex flex-col selection:bg-[var(--accent)] selection:text-[var(--accent-text)] transition-colors duration-200">
+      {/* Persistent Live Scrolling Ticker at the Very Top */}
+      <LiveEventTicker
+        onNavigateToTab={setActiveTab}
+        onOpenSubmission={() => setIsSubmissionOpen(true)}
+        onOpenRegister={() => setIsRegisterOpen(true)}
+      />
+
       {/* Top Header with Industrial System Branding */}
       <Header
         activeTab={activeTab}
@@ -39,95 +49,117 @@ const MainAppContent: React.FC = () => {
         onOpenFastDevlog={handleOpenFastDevlog}
         onOpenRegister={() => setIsRegisterOpen(true)}
         onOpenObserverMode={() => setIsObserverOpen(true)}
+        onOpenSubmission={() => setIsSubmissionOpen(true)}
       />
 
-      {/* Main App Switcher Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 font-mono">
-        {activeTab === "live" && (
-          <LiveStageDashboard
-            onOpenFastDevlog={handleOpenFastDevlog}
-            onOpenSubmission={() => setIsSubmissionOpen(true)}
-            onOpenRegister={() => setIsRegisterOpen(true)}
-            onNavigateToTab={setActiveTab}
-          />
-        )}
+      {/* Main App Switcher Container with Subtle Industrial Slide-In */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 font-mono overflow-x-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full"
+          >
+            {activeTab === "live" && (
+              <LiveStageDashboard
+                onOpenFastDevlog={handleOpenFastDevlog}
+                onOpenSubmission={() => setIsSubmissionOpen(true)}
+                onOpenRegister={() => setIsRegisterOpen(true)}
+                onNavigateToTab={setActiveTab}
+              />
+            )}
 
-        {activeTab === "discovery" && (
-          <EventDiscoveryView
-            onSelectEvent={(eventId) => {
-              setActiveTab("live");
-            }}
-          />
-        )}
+            {activeTab === "my-dashboard" && (
+              <div>
+                <ParticipantDashboard
+                  onOpenSubmission={() => setIsSubmissionOpen(true)}
+                  onOpenRegister={() => setIsRegisterOpen(true)}
+                  onNavigateToTab={setActiveTab}
+                />
+              </div>
+            )}
 
-        {activeTab === "duel" && (
-          <DuelStageView />
-        )}
+            {activeTab === "discovery" && (
+              <EventDiscoveryView
+                onSelectEvent={(eventId) => {
+                  setActiveTab("live");
+                }}
+              />
+            )}
 
-        {activeTab === "leaderboard" && (
-          <div>
-            <Leaderboard
-              onNavigateToJudging={() => setActiveTab("judging")}
-              onOpenSubmission={() => setIsSubmissionOpen(true)}
-              onNavigateToDevlog={() => setActiveTab("devlog")}
-            />
-          </div>
-        )}
+            {activeTab === "duel" && (
+              <DuelStageView />
+            )}
 
-        {activeTab === "devlog" && (
-          <div>
-            <DevlogSection />
-          </div>
-        )}
+            {activeTab === "leaderboard" && (
+              <div>
+                <Leaderboard
+                  onNavigateToJudging={() => setActiveTab("judging")}
+                  onOpenSubmission={() => setIsSubmissionOpen(true)}
+                  onNavigateToDevlog={() => setActiveTab("devlog")}
+                />
+              </div>
+            )}
 
-        {activeTab === "projects" && (
-          <div>
-            <ProjectsTeamsSection />
-          </div>
-        )}
+            {activeTab === "devlog" && (
+              <div>
+                <DevlogSection />
+              </div>
+            )}
 
-        {activeTab === "chat" && (
-          <div>
-            <LiveChatView />
-          </div>
-        )}
+            {activeTab === "projects" && (
+              <div>
+                <ProjectsTeamsSection />
+              </div>
+            )}
 
-        {activeTab === "judging" && (
-          <div>
-            <JudgeDashboard />
-          </div>
-        )}
+            {activeTab === "chat" && (
+              <div>
+                <LiveChatView />
+              </div>
+            )}
 
-        {activeTab === "admin" && (
-          <div>
-            <OrganizerDashboard />
-          </div>
-        )}
+            {activeTab === "judging" && (
+              <div>
+                <JudgeDashboard />
+              </div>
+            )}
+
+            {activeTab === "admin" && (
+              <div>
+                <OrganizerDashboard />
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
-      {/* Industrial Footer */}
-      <footer className="mt-auto border-t-2 border-[#1A1A1A] bg-[#F8F7F4] py-6 px-4 sm:px-8 text-xs text-[#1A1A1A] font-mono">
+      {/* Variation 10 Galactic Arena Footer */}
+      <footer className="mt-auto border-t border-[var(--border)]/20 bg-[var(--bg)] py-4 px-4 sm:px-8 text-xs text-[var(--ink)] font-mono transition-colors duration-200">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="font-display font-bold text-base uppercase tracking-tight text-[#1A1A1A]">
-              COMPETITION_OS
+            <span className="tag-box text-[10px]">
+              ARENA_v2
             </span>
-            <span className="text-[#999] font-bold">/</span>
-            <span className="text-xs text-[#666]">
-              [01] CORE_V.2.0.4 • Специально для сообщества <strong className="text-[#1A1A1A]">Fix-Ed</strong>
+            <span className="text-[var(--ink-light)] font-bold">/</span>
+            <span className="text-xs text-[var(--ink-muted)]">
+              SYNCING_HOST... // AI ONLINE // PING 12ms // Fix-Ed Community
             </span>
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-1.5 text-xs text-[#1A1A1A]">
-              <span className="w-2 h-2 rounded-full bg-[#E63946] inline-block" />
-              <span className="font-bold tracking-wider">[SYSTEM_READY]</span>
+            <div className="flex items-center gap-1.5 text-xs text-[var(--ink)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--accent)] inline-block animate-pulse" />
+              <span className="font-bold tracking-wider">CORE_VERSION: 2.0_BUILD_8841</span>
             </div>
             <a
               href="https://fix-ed.me"
               target="_blank"
               rel="noreferrer"
-              className="text-[#E63946] hover:underline font-bold flex items-center gap-1 uppercase text-xs"
+              className="text-[var(--accent)] hover:underline font-bold flex items-center gap-1 uppercase text-xs"
             >
               <span>fix-ed.me</span>
               <ExternalLink className="w-3.5 h-3.5" />

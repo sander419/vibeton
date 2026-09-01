@@ -1,29 +1,50 @@
 import React, { useState } from "react";
 import { useHackathon } from "../context/HackathonContext";
-import { UserPlus, X } from "lucide-react";
+import { UserPlus, X, Save, RotateCcw } from "lucide-react";
 import type { Role } from "../types";
+import { usePersistentDraft } from "../utils/usePersistentDraft";
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface RegisterFormDraft {
+  name: string;
+  handle: string;
+  role: Role;
+  primaryRole: string;
+  skillsInput: string;
+  bio: string;
+}
+
 export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
   const { registerUser } = useHackathon();
 
-  const [name, setName] = useState("");
-  const [handle, setHandle] = useState("");
-  const [role, setRole] = useState<Role>("participant");
-  const [primaryRole, setPrimaryRole] = useState("Fullstack Developer");
-  const [skillsInput, setSkillsInput] = useState("React, TypeScript, Express, AI");
-  const [bio, setBio] = useState("Разрабатываю сервисы для хакатонов и сообщества");
+  const defaultValues: RegisterFormDraft = {
+    name: "",
+    handle: "",
+    role: "participant",
+    primaryRole: "Fullstack Developer",
+    skillsInput: "React, TypeScript, Express, AI",
+    bio: "Разрабатываю сервисы для хакатонов и сообщества",
+  };
+
+  const {
+    data: formData,
+    updateField,
+    clearDraft,
+    hasDraft,
+    lastSavedTime
+  } = usePersistentDraft<RegisterFormDraft>("vibathon_register_form_draft", defaultValues);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || isSubmitting) return;
+    if (!formData.name.trim() || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
@@ -36,14 +57,15 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
       const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 
       await registerUser({
-        name,
-        handle: handle.startsWith("@") ? handle : `@${handle || name.toLowerCase().replace(/\s+/g, '')}`,
-        role,
-        primaryRole,
-        skills: skillsInput.split(",").map(s => s.trim()).filter(Boolean),
-        bio,
+        name: formData.name,
+        handle: formData.handle.startsWith("@") ? formData.handle : `@${formData.handle || formData.name.toLowerCase().replace(/\s+/g, '')}`,
+        role: formData.role,
+        primaryRole: formData.primaryRole,
+        skills: formData.skillsInput.split(",").map(s => s.trim()).filter(Boolean),
+        bio: formData.bio,
         avatar: randomAvatar
       });
+      clearDraft();
       onClose();
     } catch (e) {
       console.error(e);
@@ -60,11 +82,34 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
             <div className="w-8 h-8 rounded-xl bg-[#121627] text-[#c8ff3d] border border-[#2a3148] flex items-center justify-center font-bold">
               <UserPlus className="w-4 h-4" />
             </div>
-            <h3 className="text-base sm:text-lg font-bold text-white font-mono uppercase tracking-wider">Регистрация на Вайбатон</h3>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-bold text-white font-mono uppercase tracking-wider">Регистрация на Вайбатон</h3>
+                {hasDraft && (
+                  <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#1e2436] text-[#8b93ad] text-[9px] font-mono border border-[#2a3148]">
+                    <Save className="w-2.5 h-2.5 text-[#c8ff3d]" />
+                    <span>Черновик</span>
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-white border border-[#2a3148] transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {hasDraft && (
+              <button
+                type="button"
+                onClick={clearDraft}
+                title="Очистить черновик регистрации"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-amber-400 border border-[#2a3148] text-[11px] font-mono transition-colors"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span className="hidden sm:inline">Сбросить</span>
+              </button>
+            )}
+            <button onClick={onClose} className="p-2 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-white border border-[#2a3148] transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 font-mono">
@@ -73,8 +118,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
             <input
               type="text"
               required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={formData.name}
+              onChange={(e) => updateField("name", e.target.value)}
               placeholder="Алексей Смирнов"
               className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
             />
@@ -84,8 +129,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
             <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Telegram / Fix-Ed ник</label>
             <input
               type="text"
-              value={handle}
-              onChange={(e) => setHandle(e.target.value)}
+              value={formData.handle}
+              onChange={(e) => updateField("handle", e.target.value)}
               placeholder="@alex_dev"
               className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
             />
@@ -95,8 +140,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
             <div>
               <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Роль в хакатоне</label>
               <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as Role)}
+                value={formData.role}
+                onChange={(e) => updateField("role", e.target.value as Role)}
                 className="w-full bg-[#0e111c] border border-[#2a3148] text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-[#c8ff3d] font-mono"
               >
                 <option value="participant">Участник</option>
@@ -110,8 +155,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
               <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Специализация</label>
               <input
                 type="text"
-                value={primaryRole}
-                onChange={(e) => setPrimaryRole(e.target.value)}
+                value={formData.primaryRole}
+                onChange={(e) => updateField("primaryRole", e.target.value)}
                 placeholder="Frontend, Backend, AI"
                 className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
               />
@@ -122,8 +167,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
             <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Стек и ключевые навыки</label>
             <input
               type="text"
-              value={skillsInput}
-              onChange={(e) => setSkillsInput(e.target.value)}
+              value={formData.skillsInput}
+              onChange={(e) => updateField("skillsInput", e.target.value)}
               placeholder="React, TypeScript, Node.js, Python, Tailwind"
               className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
             />
@@ -133,8 +178,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
             <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">О себе / Что планируете делать</label>
             <textarea
               rows={2}
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
+              value={formData.bio}
+              onChange={(e) => updateField("bio", e.target.value)}
               placeholder="Ищу команду или готовлю соло-проект..."
               className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl p-3 text-xs text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d] resize-none"
             />

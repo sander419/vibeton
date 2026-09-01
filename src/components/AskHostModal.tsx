@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useHackathon } from "../context/HackathonContext";
-import { Bot, Send, X, Loader2 } from "lucide-react";
+import { Bot, Send, X, Loader2, RotateCcw } from "lucide-react";
 
 interface AskHostModalProps {
   isOpen: boolean;
@@ -9,16 +9,66 @@ interface AskHostModalProps {
 
 export const AskHostModal: React.FC<AskHostModalProps> = ({ isOpen, onClose }) => {
   const { askAIHost, hackathon } = useHackathon();
-  const [question, setQuestion] = useState("");
-  const [messages, setMessages] = useState<Array<{ sender: 'user' | 'host', text: string }>>([
-    {
-      sender: "host",
-      text: `Привет! Я официальный AI Host ${hackathon?.title || "Вайбатона №2"}. Могу подсказать по дедлайнам, правилам, критериям оценки или текущей статистике состязания. Что вас интересует?`
+
+  const [question, setQuestion] = useState(() => {
+    try {
+      return localStorage.getItem("vibathon_ai_host_question_draft") || "";
+    } catch {
+      return "";
     }
-  ]);
+  });
+
+  const defaultGreeting = `Привет! Я официальный AI Host ${hackathon?.title || "Вайбатона №2"}. Могу подсказать по дедлайнам, правилам, критериям оценки или текущей статистике состязания. Что вас интересует?`;
+
+  const [messages, setMessages] = useState<Array<{ sender: 'user' | 'host', text: string }>>(() => {
+    try {
+      const saved = localStorage.getItem("vibathon_ai_host_chat_history");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return [{ sender: "host", text: defaultGreeting }];
+  });
+
   const [isLoading, setIsLoading] = useState(false);
 
+  // Sync question draft
+  useEffect(() => {
+    try {
+      if (question) {
+        localStorage.setItem("vibathon_ai_host_question_draft", question);
+      } else {
+        localStorage.removeItem("vibathon_ai_host_question_draft");
+      }
+    } catch {
+      // ignore
+    }
+  }, [question]);
+
+  // Sync messages
+  useEffect(() => {
+    try {
+      localStorage.setItem("vibathon_ai_host_chat_history", JSON.stringify(messages));
+    } catch {
+      // ignore
+    }
+  }, [messages]);
+
   if (!isOpen) return null;
+
+  const handleClearHistory = () => {
+    setMessages([{ sender: "host", text: defaultGreeting }]);
+    setQuestion("");
+    try {
+      localStorage.removeItem("vibathon_ai_host_chat_history");
+      localStorage.removeItem("vibathon_ai_host_question_draft");
+    } catch {
+      // ignore
+    }
+  };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +76,12 @@ export const AskHostModal: React.FC<AskHostModalProps> = ({ isOpen, onClose }) =
 
     const userQ = question;
     setQuestion("");
+    try {
+      localStorage.removeItem("vibathon_ai_host_question_draft");
+    } catch {
+      // ignore
+    }
+
     setMessages(prev => [...prev, { sender: "user", text: userQ }]);
     setIsLoading(true);
 
@@ -63,12 +119,24 @@ export const AskHostModal: React.FC<AskHostModalProps> = ({ isOpen, onClose }) =
               <p className="text-xs text-[#8b93ad] font-mono">Ведущий знает все правила, таймлайн и контекст события</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-white border border-[#2a3148] transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {messages.length > 1 && (
+              <button
+                onClick={handleClearHistory}
+                title="Очистить историю диалога"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-amber-400 border border-[#2a3148] text-xs font-mono transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Очистить</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-white border border-[#2a3148] transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Message Log */}

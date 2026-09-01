@@ -1,21 +1,70 @@
 @import "tailwindcss";
 
 @layer base {
-  :root {
+  :root,
+  [data-theme="light"] {
     --bg: #F8F7F4;
     --bg-card: #FFFFFF;
     --bg-muted: #EFECE6;
-    --bg-dark: #1A1A1A;
-    --ink: #1A1A1A;
-    --ink-muted: #666666;
-    --ink-light: #999999;
-    --border: #1A1A1A;
-    --border-light: #D5D2CA;
-    --accent: #E63946;
-    --accent-hover: #D02B38;
-    --blue: #0F4C81;
-    --green: #2A9D8F;
-    --amber: #E76F51;
+    --bg-dark: #111113;
+    --bg-input: #FFFFFF;
+    --bg-glass: rgba(248, 247, 244, 0.9);
+    --ink: #111113;
+    --ink-muted: #55555B;
+    --ink-light: #8E8E93;
+    --ink-faint: rgba(17, 17, 19, 0.1);
+    --border: #111113;
+    --border-light: #D9D7D0;
+    --border-muted: #E5E3DC;
+    --accent: #2563EB;
+    --accent-hover: #1D4ED8;
+    --accent-faint: rgba(37, 99, 235, 0.08);
+    --accent-text: #FFFFFF;
+    --terminal-tag: #111113;
+    --terminal-tag-text: #FFFFFF;
+    --shadow-block: 4px 4px 0px #111113;
+    --shadow-sm: 2px 2px 0px #111113;
+    --grid-line: rgba(17, 17, 19, 0.06);
+    --grid-opacity: 0.3;
+    --blue: #2563EB;
+    --green: #10B981;
+    --amber: #F59E0B;
+    --red: #EF4444;
+    --scrollbar-track: #F8F7F4;
+    --scrollbar-thumb: #111113;
+  }
+
+  [data-theme="terminal-dark"],
+  .theme-terminal-dark {
+    --bg: #090A0D;
+    --bg-card: #111318;
+    --bg-muted: #171922;
+    --bg-dark: #050608;
+    --bg-input: #0D0F14;
+    --bg-glass: rgba(9, 10, 13, 0.92);
+    --ink: #F0F4F8;
+    --ink-muted: #9DA6B5;
+    --ink-light: #656E7E;
+    --ink-faint: rgba(240, 244, 248, 0.12);
+    --border: #2D323E;
+    --border-light: #222631;
+    --border-muted: #1A1D26;
+    --accent: #BAFF00;
+    --accent-hover: #D0FF2A;
+    --accent-faint: rgba(186, 255, 0, 0.12);
+    --accent-text: #090A0D;
+    --terminal-tag: #BAFF00;
+    --terminal-tag-text: #090A0D;
+    --shadow-block: 4px 4px 0px rgba(0, 0, 0, 0.9);
+    --shadow-sm: 2px 2px 0px rgba(0, 0, 0, 0.9);
+    --grid-line: rgba(186, 255, 0, 0.05);
+    --grid-opacity: 0.45;
+    --blue: #38BDF8;
+    --green: #22C55E;
+    --amber: #FBBF24;
+    --red: #F87171;
+    --scrollbar-track: #090A0D;
+    --scrollbar-thumb: #2D323E;
   }
 
   * {
@@ -26,7 +75,8 @@
     background-color: var(--bg);
     color: var(--ink);
     overflow-x: hidden;
-    font-family: 'Space Mono', 'JetBrains Mono', monospace;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   body::before {
@@ -35,25 +85,110 @@
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.35;
+    opacity: var(--grid-opacity);
     background-image: 
-      linear-gradient(rgba(26, 26, 26, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(26, 26, 26, 0.05) 1px, transparent 1px);
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
     background-size: 32px 32px;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-text);
   }
 }
 
+/* Terminal Dark Overrides for universal component adaptability */
+[data-theme="terminal-dark"] .bg-\[\#F8F7F4\],
+[data-theme="terminal-dark"] .bg-white,
+[data-theme="terminal-dark"] .bg-\[\#FFFFFF\] {
+  background-color: var(--bg-card) !important;
+}
+
+[data-theme="terminal-dark"] .bg-\[\#EFECE6\] {
+  background-color: var(--bg-muted) !important;
+}
+
+[data-theme="terminal-dark"] .bg-\[\#111113\] {
+  background-color: var(--bg-dark) !important;
+}
+
+[data-theme="terminal-dark"] .text-\[\#111113\] {
+  color: var(--ink) !important;
+}
+
+[data-theme="terminal-dark"] .text-\[\#55555B\],
+[data-theme="terminal-dark"] .text-\[\#555\],
+[data-theme="terminal-dark"] .text-\[\#666\] {
+  color: var(--ink-muted) !important;
+}
+
+[data-theme="terminal-dark"] .border-\[\#111113\] {
+  border-color: var(--border) !important;
+}
+
+[data-theme="terminal-dark"] .border-\[\#D9D7D0\],
+[data-theme="terminal-dark"] .border-\[\#E5E3DC\],
+[data-theme="terminal-dark"] .border-\[\#EFECE6\] {
+  border-color: var(--border-light) !important;
+}
+
+[data-theme="terminal-dark"] .shadow-\[4px_4px_0px_\#111113\],
+[data-theme="terminal-dark"] .shadow-\[4px_4px_0px_\#000000\] {
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.95) !important;
+}
+
+[data-theme="terminal-dark"] .shadow-\[2px_2px_0px_\#111113\] {
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.95) !important;
+}
+
+[data-theme="terminal-dark"] .hover\:bg-\[\#EFECE6\]:hover {
+  background-color: var(--bg-muted) !important;
+}
+
+[data-theme="terminal-dark"] .hover\:bg-\[\#F8F7F4\]:hover {
+  background-color: var(--bg-muted) !important;
+}
+
+[data-theme="terminal-dark"] .hover\:bg-\[\#111113\]:hover {
+  background-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+[data-theme="terminal-dark"] input,
+[data-theme="terminal-dark"] textarea,
+[data-theme="terminal-dark"] select {
+  background-color: var(--bg-input);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
 .font-display {
-  font-family: 'Oswald', sans-serif;
-  letter-spacing: -0.02em;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.04em;
 }
 
 .font-mono {
-  font-family: 'Space Mono', 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .font-body {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Galactic Arena Tag Box */
+.tag-box {
+  border: 1px solid var(--border);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: 'JetBrains Mono', monospace;
+  display: inline-block;
+  font-weight: 700;
+  background-color: var(--bg-card);
+  color: var(--ink);
+  transition: all 0.15s ease;
 }
 
 /* Industrial label */
@@ -62,12 +197,68 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: var(--ink);
-  opacity: 0.65;
+  opacity: 0.75;
   font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .accent-text {
   color: var(--accent);
+}
+
+/* Galactic Arena Action Button */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  text-decoration: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--border);
+  transition: all 0.15s ease;
+}
+
+[data-theme="terminal-dark"] .action-btn {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+
+.action-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.card-galactic {
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+.card-galactic.current-active {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--border);
+}
+
+.card-galactic.current-active .action-btn {
+  background: var(--bg-card);
+  color: var(--accent);
+  border-color: var(--bg-card);
+}
+
+.card-galactic.current-active .action-btn:hover {
+  background: var(--ink);
+  color: var(--bg-card);
+  border-color: var(--ink);
 }
 
 /* Custom crisp scrollbars */
@@ -76,14 +267,14 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F8F7F4;
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1A1A1A;
+  background: var(--scrollbar-thumb);
   border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #E63946;
+  background: var(--accent);
 }
 
 /* Sound Wave animation */
@@ -116,5 +307,14 @@
 }
 .animate-ind-pulse {
   animation: indPulse 2s infinite ease-in-out;
+}
+
+/* Terminal Blinking Cursor */
+@keyframes termBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.animate-term-blink {
+  animation: termBlink 1s infinite;
 }
 

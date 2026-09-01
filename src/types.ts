@@ -362,11 +362,27 @@ export interface Judgement {
 export interface ChatMessage {
   id: string;
   hackathonId: string;
+  channelId?: string; // 'general' | 'announcements' | 'mentors' | 'team_${teamId}'
+  teamId?: string;
+  isPrivate?: boolean;
   authorId: string;
   authorName: string;
   authorAvatar?: string;
   authorRole: Role;
   content: string;
+  codeSnippet?: {
+    language: string;
+    code: string;
+  };
+  attachmentUrl?: string;
+  attachmentTitle?: string;
+  attachmentType?: 'github' | 'figma' | 'demo' | 'file';
+  reactions?: Record<string, string[]>; // emoji -> array of userIds
+  replyTo?: {
+    id: string;
+    authorName: string;
+    content: string;
+  };
   isPinned?: boolean;
   isHost?: boolean;
   createdAt: string;
@@ -374,11 +390,17 @@ export interface ChatMessage {
 
 export interface NotificationItem {
   id: string;
-  userId: string;
-  type: string;
+  userId?: string;
+  type: string; // 'DEADLINE_WARNING' | 'MENTOR_MESSAGE' | 'STAGE_CHANGE' | 'AI_BROADCAST' | 'JUDGING_FEEDBACK' | 'DUEL_CHALLENGE' | 'SYSTEM'
+  category?: 'deadline' | 'mentor' | 'stage' | 'ai' | 'submission' | 'system';
   title: string;
   message: string;
   link?: string;
+  actionTab?: string;
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  senderName?: string;
+  senderAvatar?: string;
+  senderRole?: string;
   isRead: boolean;
   createdAt: string;
 }
@@ -424,3 +446,49 @@ export interface FinalShowRecap {
   winnerStory: string;
   closingWords: string;
 }
+
+export interface UserRegistrationRecord {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  eventTheme: string;
+  templateType: EventTemplateType;
+  stage: HackathonStage;
+  registeredAt: string;
+  status: 'CONFIRMED' | 'ACTIVE' | 'PENDING';
+  teamId?: string;
+  teamName?: string;
+  roleInTeam?: string;
+  isCaptain?: boolean;
+  deadline?: string;
+  startTime?: string;
+  hasSubmission?: boolean;
+}
+
+export interface PastHackathonRecord {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  eventTheme: string;
+  templateType: EventTemplateType;
+  dateRange: string;
+  completedAt: string;
+  teamName?: string;
+  roleInTeam?: string;
+  projectTitle?: string;
+  projectTagline?: string;
+  projectRepoUrl?: string;
+  projectDemoUrl?: string;
+  projectStatus?: ProjectStatus;
+  placement?: string; // e.g. "1-е место (Гран-При)", "Топ-3 Финалист", "Участник"
+  rank?: number;
+  totalTeams?: number;
+  score?: number;
+  maxPossibleScore?: number;
+  awards?: string[];
+  certificateUrl?: string;
+  feedbackSummary?: string;
+}
+
+export type ThemeMode = 'light' | 'terminal-dark';
+

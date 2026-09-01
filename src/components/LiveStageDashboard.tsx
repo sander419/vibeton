@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "motion/react";
 import { useHackathon } from "../context/HackathonContext";
 import { 
   Sparkles, 
@@ -18,9 +19,12 @@ import {
   Radio,
   Swords,
   TrendingUp,
-  Activity
+  Activity,
+  UserCheck
 } from "lucide-react";
 import { speakText, stopSpeech, sound } from "../utils/audio";
+import { EventTimeline } from "./EventTimeline";
+import { CountdownTimer } from "./CountdownTimer";
 
 interface LiveStageDashboardProps {
   onOpenFastDevlog: () => void;
@@ -196,9 +200,114 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
   ];
 
   return (
-    <div className="space-y-8 mb-14 font-mono text-[#1A1A1A]">
+    <div className="space-y-8 mb-14 font-mono text-[#111113]">
+      {/* VARIATION 10 HERO BANNER */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22, delay: 0.01, ease: [0.16, 1, 0.3, 1] }}
+        className="p-6 sm:p-8 bg-[#FFFFFF] border border-[#111113] shadow-[4px_4px_0px_#111113] space-y-4"
+      >
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="tag-box">
+            OPERATOR: {currentUser?.name?.toUpperCase() || "ИВАН КОВАЛЕВ"} // SECURITY LEVEL 4
+          </div>
+          <div className="text-xs font-bold text-[#2563EB] tracking-wider uppercase flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#2563EB] animate-pulse" />
+            <span>NODE_READY // PING 12ms</span>
+          </div>
+        </div>
+
+        <h1 className="font-display text-4xl sm:text-6xl font-bold uppercase tracking-tight text-[#111113] leading-none">
+          BATTLE ENGINE <span className="text-[#2563EB]">LOADED.</span>
+        </h1>
+
+        <p className="text-sm sm:text-base text-[#555] max-w-2xl leading-relaxed">
+          The galaxy's most advanced competition OS. Event Engine [X] // AI Host [X] // Realtime Observer [X]
+        </p>
+
+        {/* Quick Format Showcase Cards from Variation 10 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          <div className="card-galactic p-4 bg-[#FFFFFF] flex flex-col justify-between">
+            <div>
+              <div className="text-[10px] text-[#888] font-bold uppercase mb-1">01 / SPRINT</div>
+              <div className="font-display text-base font-bold text-[#111113] uppercase mb-1">Вайбатон №2</div>
+              <p className="text-[11px] text-[#555] mb-3 leading-snug">Multi-layer platform for vibe synchronization and rapid MVP build.</p>
+            </div>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOpenFastDevlog();
+              }}
+              className="action-btn text-center text-xs py-1.5"
+            >
+              + DEVLOG
+            </button>
+          </div>
+
+          <div className="card-galactic p-4 bg-[#2563EB] text-white flex flex-col justify-between shadow-[4px_4px_0px_#111113]">
+            <div>
+              <div className="text-[10px] text-white/80 font-bold uppercase mb-1 flex items-center justify-between">
+                <span>02 / SPEED RUN</span>
+                <span className="bg-white text-[#2563EB] px-1 py-0.2 text-[9px] font-bold">[ACTIVE]</span>
+              </div>
+              <div className="font-display text-base font-bold text-white uppercase mb-1">Gemini Speed Run</div>
+              <p className="text-[11px] text-white/90 mb-3 leading-snug">High-speed CRUD implementation using Gemini functional calling cores.</p>
+            </div>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onNavigateToTab("duel");
+              }}
+              className="w-full py-1.5 px-3 bg-white text-[#2563EB] hover:bg-[#F8F7F4] font-bold text-xs uppercase border border-[#111113] transition-all text-center"
+            >
+              ENGAGE →
+            </button>
+          </div>
+
+          <div className="card-galactic p-4 bg-[#FFFFFF] flex flex-col justify-between">
+            <div>
+              <div className="text-[10px] text-[#888] font-bold uppercase mb-1">03 / 1V1 ARENA</div>
+              <div className="font-display text-base font-bold text-[#111113] uppercase mb-1">1v1 Cyber Duel</div>
+              <p className="text-[11px] text-[#555] mb-3 leading-snug">15-minute high intensity algorithmic frontend showdown.</p>
+            </div>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onNavigateToTab("duel");
+              }}
+              className="action-btn text-center text-xs py-1.5"
+            >
+              DUEL ARENA
+            </button>
+          </div>
+
+          <div className="card-galactic p-4 bg-[#FFFFFF] flex flex-col justify-between">
+            <div>
+              <div className="text-[10px] text-[#888] font-bold uppercase mb-1">04 / DISCOVERY</div>
+              <div className="font-display text-base font-bold text-[#111113] uppercase mb-1">Каталог форматов</div>
+              <p className="text-[11px] text-[#555] mb-3 leading-snug">Питчи, хакатоны, спидраны и кастомные турнирные сетки.</p>
+            </div>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onNavigateToTab("discovery");
+              }}
+              className="action-btn text-center text-xs py-1.5"
+            >
+              EXPLORE
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
       {/* 1. STAGE PROGRESS TRACKER */}
-      <div className="bg-[#FFFFFF] p-3 sm:p-4 border-2 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] overflow-x-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22, delay: 0.02, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-[#FFFFFF] p-3 sm:p-4 border border-[#111113] shadow-[3px_3px_0px_#111113] overflow-x-auto"
+      >
         <div className="flex items-center justify-between min-w-[560px]">
           {stages.map((st, idx) => {
             const isPassed = currentStageIndex > idx;
@@ -206,18 +315,18 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
             return (
               <React.Fragment key={st.id}>
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-7 h-7 flex items-center justify-center text-xs font-bold border-1.5 ${
+                  <div className={`w-7 h-7 flex items-center justify-center text-xs font-bold border ${
                     isCurrent
-                      ? "bg-[#E63946] text-white border-[#1A1A1A]"
+                      ? "bg-[#2563EB] text-white border-[#111113]"
                       : isPassed
-                      ? "bg-[#1A1A1A] text-[#F8F7F4] border-[#1A1A1A]"
-                      : "bg-[#EFECE6] text-[#888] border-[#1A1A1A]"
+                      ? "bg-[#111113] text-[#F8F7F4] border-[#111113]"
+                      : "bg-[#EFECE6] text-[#888] border-[#111113]"
                   }`}>
                     {isPassed ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
                   </div>
                   <div className="flex flex-col">
                     <span className={`text-[11px] uppercase tracking-wider font-bold ${
-                      isCurrent ? "text-[#E63946]" : isPassed ? "text-[#1A1A1A]" : "text-[#888]"
+                      isCurrent ? "text-[#2563EB]" : isPassed ? "text-[#111113]" : "text-[#888]"
                     }`}>
                       {st.label}
                     </span>
@@ -227,52 +336,72 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                   </div>
                 </div>
                 {idx < stages.length - 1 && (
-                  <div className={`flex-1 h-[2px] mx-3 ${isPassed ? "bg-[#1A1A1A]" : "bg-[#D5D2CA]"}`} />
+                  <div className={`flex-1 h-[2px] mx-3 ${isPassed ? "bg-[#111113]" : "bg-[#D5D2CA]"}`} />
                 )}
               </React.Fragment>
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
-      {/* 2. MAIN INDUSTRIAL COCKPIT: EVENT HERO + COUNTDOWN MATRIX */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      {/* HIGH-VISIBILITY EVENT MILESTONE COUNTDOWN COMPONENT */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.24, delay: 0.03, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <CountdownTimer
+          variant="hero"
+          onOpenSubmission={onOpenSubmission}
+          onOpenRegister={onOpenRegister}
+          onOpenDevlog={onOpenFastDevlog}
+          onNavigateToTab={onNavigateToTab}
+        />
+      </motion.div>
+
+      {/* 2. MAIN COCKPIT: EVENT HERO + OVERVIEW MATRIX */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch"
+      >
         {/* Left 7 Cols: Event Main Info & Command CTAs */}
-        <div className="lg:col-span-7 bg-[#FFFFFF] border-2 border-[#1A1A1A] p-6 sm:p-8 shadow-[4px_4px_0px_#1A1A1A] flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#111113] p-6 sm:p-8 shadow-[4px_4px_0px_#111113] flex flex-col justify-between">
           <div className="space-y-4">
             {/* Header label */}
-            <div className="flex items-center justify-between border-b-1.5 border-[#1A1A1A] pb-2">
+            <div className="flex items-center justify-between border-b border-[#111113] pb-2">
               <div className="label">[02] OVERVIEW</div>
-              <div className="label text-[#E63946]">[STATUS: LIVE]</div>
+              <div className="label text-[#2563EB]">[STATUS: LIVE]</div>
             </div>
 
             {/* Badges Row */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-white bg-[#E63946] border border-[#1A1A1A]">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-white bg-[#2563EB] border border-[#111113]">
                 <span className="w-1.5 h-1.5 bg-white animate-pulse" />
                 LIVE TOURNAMENT
               </span>
-              <span className="px-2 py-0.5 text-[11px] uppercase font-bold text-[#1A1A1A] border border-[#1A1A1A] bg-[#EFECE6]">
+              <span className="px-2 py-0.5 text-[11px] uppercase font-bold text-[#111113] border border-[#111113] bg-[#EFECE6]">
                 FORMAT: {hackathon?.templateType || "VIBEATHON"}
               </span>
-              <span className="px-2 py-0.5 text-[11px] uppercase font-bold text-[#666] border border-[#1A1A1A] bg-[#FFFFFF]">
+              <span className="px-2 py-0.5 text-[11px] uppercase font-bold text-[#666] border border-[#111113] bg-[#FFFFFF]">
                 7 DAYS SPRINT
               </span>
             </div>
 
             {/* Giant Title */}
-            <h1 className="font-display text-4xl sm:text-6xl font-bold text-[#1A1A1A] leading-[0.92] tracking-tight uppercase">
+            <h2 className="font-display text-3xl sm:text-5xl font-bold text-[#111113] leading-[0.95] tracking-tight uppercase">
               {hackathon?.title || "LIVE EVENT &"} <br />
-              <span className="text-[#E63946]">BATTLE ENGINE</span>
-            </h1>
+              <span className="text-[#2563EB]">BATTLE ENGINE</span>
+            </h2>
 
             {/* Theme & Goal Box */}
-            <div className="p-4 sm:p-5 bg-[#F8F7F4] border-1.5 border-[#1A1A1A] space-y-1.5">
+            <div className="p-4 sm:p-5 bg-[#F8F7F4] border border-[#111113] space-y-1.5">
               <div className="text-[10px] text-[#666] uppercase tracking-widest flex items-center justify-between font-bold">
                 <span>[ТЕМА_СОРЕВНОВАНИЯ]</span>
-                <span className="text-[#E63946]">STAGE: {hackathon?.stage || "ACTIVE"}</span>
+                <span className="text-[#2563EB]">STAGE: {hackathon?.stage || "ACTIVE"}</span>
               </div>
-              <div className="text-base sm:text-lg font-bold text-[#1A1A1A] uppercase">
+              <div className="text-base sm:text-lg font-bold text-[#111113] uppercase">
                 {hackathon?.theme || "Платформа для проведения Вайбатонов"}
               </div>
               <p className="text-xs sm:text-sm text-[#444] leading-relaxed">
@@ -289,7 +418,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                   sound.playClick();
                   onOpenFastDevlog();
                 }}
-                className="px-6 py-3 text-xs font-bold tracking-wider uppercase bg-[#1A1A1A] text-[#F8F7F4] hover:bg-[#E63946] hover:text-white border-1.5 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-2"
+                className="px-6 py-3 text-xs font-bold tracking-wider uppercase bg-[#111113] text-[#F8F7F4] hover:bg-[#2563EB] hover:text-white border border-[#111113] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>+ DEVLOG (30 SEC)</span>
@@ -300,10 +429,21 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                   sound.playClick();
                   onOpenSubmission();
                 }}
-                className="px-5 py-3 text-xs font-bold tracking-wider uppercase bg-[#FFFFFF] hover:bg-[#1A1A1A] hover:text-[#F8F7F4] text-[#1A1A1A] border-1.5 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-2"
+                className="px-5 py-3 text-xs font-bold tracking-wider uppercase bg-[#FFFFFF] hover:bg-[#111113] hover:text-[#F8F7F4] text-[#111113] border border-[#111113] shadow-[3px_3px_0px_#111113] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-2"
               >
-                <Send className="w-4 h-4 text-[#E63946]" />
+                <Send className="w-4 h-4 text-[#2563EB]" />
                 <span>Сдать проект</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  onNavigateToTab("my-dashboard");
+                }}
+                className="px-4 py-3 text-xs font-bold tracking-wider uppercase text-[#111113] hover:bg-[#EFECE6] bg-[#FFFFFF] border border-[#111113] shadow-[3px_3px_0px_#111113] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5"
+              >
+                <UserCheck className="w-4 h-4 text-[#2563EB]" />
+                <span>Мой дашборд</span>
               </button>
 
               <button
@@ -311,7 +451,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                   sound.playClick();
                   onNavigateToTab("projects");
                 }}
-                className="px-4 py-3 text-xs font-bold tracking-wider uppercase text-[#1A1A1A] hover:bg-[#EFECE6] bg-[#F8F7F4] border-1.5 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] transition-all flex items-center gap-1.5"
+                className="px-4 py-3 text-xs font-bold tracking-wider uppercase text-[#111113] hover:bg-[#EFECE6] bg-[#F8F7F4] border border-[#111113] transition-all flex items-center gap-1.5"
               >
                 <span>Проекты ({projects.length})</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -319,66 +459,66 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
             </div>
 
             {/* Metrics Row */}
-            <div className="flex flex-wrap items-center gap-4 pt-3 text-xs text-[#666] border-t-1.5 border-[#1A1A1A]">
+            <div className="flex flex-wrap items-center gap-4 pt-3 text-xs text-[#666] border-t border-[#111113]">
               <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-[#1A1A1A]" />
-                <span><strong className="text-[#1A1A1A]">{users.length}</strong> участников</span>
+                <Users className="w-3.5 h-3.5 text-[#111113]" />
+                <span><strong className="text-[#111113]">{users.length}</strong> участников</span>
               </div>
               <span>/</span>
               <div className="flex items-center gap-1.5">
-                <Flame className="w-3.5 h-3.5 text-[#E63946]" />
-                <span><strong className="text-[#1A1A1A]">{teams.length}</strong> команд</span>
+                <Flame className="w-3.5 h-3.5 text-[#2563EB]" />
+                <span><strong className="text-[#111113]">{teams.length}</strong> команд</span>
               </div>
               <span>/</span>
               <div className="flex items-center gap-1.5">
-                <Code className="w-3.5 h-3.5 text-[#0F4C81]" />
-                <span><strong className="text-[#1A1A1A]">{mvpCount}</strong> MVP готово</span>
+                <Code className="w-3.5 h-3.5 text-[#2563EB]" />
+                <span><strong className="text-[#111113]">{mvpCount}</strong> MVP готово</span>
               </div>
               <span>/</span>
               <div className="flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-[#E76F51]" />
-                <span><strong className="text-[#1A1A1A]">{posts.length}</strong> постов</span>
+                <Zap className="w-3.5 h-3.5 text-[#111113]" />
+                <span><strong className="text-[#111113]">{posts.length}</strong> постов</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Right 5 Cols: Countdown Timer Matrix & User HUD */}
-        <div className="lg:col-span-5 bg-[#FFFFFF] border-2 border-[#1A1A1A] p-6 sm:p-8 shadow-[4px_4px_0px_#1A1A1A] flex flex-col justify-between text-center">
+        <div className="lg:col-span-5 bg-[#FFFFFF] border border-[#111113] p-6 sm:p-8 shadow-[4px_4px_0px_#111113] flex flex-col justify-between text-center">
           <div>
-            <div className="flex items-center justify-between border-b-1.5 border-[#1A1A1A] pb-2 mb-4">
+            <div className="flex items-center justify-between border-b border-[#111113] pb-2 mb-4">
               <div className="label">[03] COUNTDOWN</div>
-              <div className="label text-[#E63946] flex items-center gap-1">
-                <Clock className="w-3 h-3 text-[#E63946]" />
+              <div className="label text-[#2563EB] flex items-center gap-1">
+                <Clock className="w-3 h-3 text-[#2563EB]" />
                 <span>SUBMISSION_DEADLINE</span>
               </div>
             </div>
 
             {/* Countdown Digits */}
             <div className="grid grid-cols-4 gap-2 sm:gap-2.5 my-3">
-              <div className="bg-[#F8F7F4] border-1.5 border-[#1A1A1A] p-3 shadow-[2px_2px_0px_#1A1A1A]">
-                <div className="font-display text-3xl sm:text-4xl font-bold text-[#1A1A1A]">
+              <div className="bg-[#F8F7F4] border border-[#111113] p-3">
+                <div className="font-display text-3xl sm:text-4xl font-bold text-[#111113]">
                   {String(timeLeft.days).padStart(2, "0")}
                 </div>
                 <div className="text-[9px] text-[#666] uppercase font-bold mt-1">Дней</div>
               </div>
 
-              <div className="bg-[#F8F7F4] border-1.5 border-[#1A1A1A] p-3 shadow-[2px_2px_0px_#1A1A1A]">
-                <div className="font-display text-3xl sm:text-4xl font-bold text-[#1A1A1A]">
+              <div className="bg-[#F8F7F4] border border-[#111113] p-3">
+                <div className="font-display text-3xl sm:text-4xl font-bold text-[#111113]">
                   {String(timeLeft.hours).padStart(2, "0")}
                 </div>
                 <div className="text-[9px] text-[#666] uppercase font-bold mt-1">Часов</div>
               </div>
 
-              <div className="bg-[#F8F7F4] border-1.5 border-[#1A1A1A] p-3 shadow-[2px_2px_0px_#1A1A1A]">
-                <div className="font-display text-3xl sm:text-4xl font-bold text-[#1A1A1A]">
+              <div className="bg-[#F8F7F4] border border-[#111113] p-3">
+                <div className="font-display text-3xl sm:text-4xl font-bold text-[#111113]">
                   {String(timeLeft.minutes).padStart(2, "0")}
                 </div>
                 <div className="text-[9px] text-[#666] uppercase font-bold mt-1">Мин</div>
               </div>
 
-              <div className="bg-[#1A1A1A] border-1.5 border-[#1A1A1A] p-3 shadow-[2px_2px_0px_#E63946]">
-                <div className="font-display text-3xl sm:text-4xl font-bold text-[#E63946]">
+              <div className="bg-[#111113] border border-[#111113] p-3 shadow-[2px_2px_0px_#2563EB]">
+                <div className="font-display text-3xl sm:text-4xl font-bold text-[#2563EB]">
                   {String(timeLeft.seconds).padStart(2, "0")}
                 </div>
                 <div className="text-[9px] text-[#F8F7F4] uppercase font-bold mt-1">Сек</div>
@@ -387,16 +527,16 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
           </div>
 
           {/* User HUD Card */}
-          <div className="mt-4 p-4 bg-[#F8F7F4] border-1.5 border-[#1A1A1A] text-left text-xs space-y-2.5">
-            <div className="flex items-center justify-between text-[#666] border-b border-[#1A1A1A] pb-2 font-bold">
+          <div className="mt-4 p-4 bg-[#F8F7F4] border border-[#111113] text-left text-xs space-y-2.5">
+            <div className="flex items-center justify-between text-[#666] border-b border-[#111113] pb-2 font-bold">
               <span>[CURRENT_USER_STATUS]</span>
-              <span className="text-[#E63946] uppercase">[{currentUser?.role || "HACKER"}]</span>
+              <span className="text-[#2563EB] uppercase">[{currentUser?.role || "HACKER"}]</span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-[#666]">Команда:</span>
-              <span className="font-bold text-[#1A1A1A] flex items-center gap-1.5">
-                <span className="w-2 h-2 bg-[#1A1A1A]" />
+              <span className="font-bold text-[#111113] flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-[#111113]" />
                 {userTeam ? userTeam.name : "Соло-участник"}
               </span>
             </div>
@@ -405,32 +545,37 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
               <span className="text-[#666]">Статус MVP:</span>
               <span className={`font-bold px-2 py-0.5 text-[10px] uppercase border ${
                 userProject?.status === "MVP" || userProject?.status === "DEMO" || userProject?.status === "SUBMITTED"
-                  ? "bg-[#1A1A1A] text-[#F8F7F4] border-[#1A1A1A]"
-                  : "bg-[#FFFFFF] text-[#1A1A1A] border-[#1A1A1A]"
+                  ? "bg-[#2563EB] text-white border-[#111113]"
+                  : "bg-[#FFFFFF] text-[#111113] border-[#111113]"
               }`}>
                 [{userProject?.status || "IDEA"}]
               </span>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* 3. OPERATIONAL ROW: AI HOST ON-AIR CONSOLE + 1V1 CYBER DUEL SPOTLIGHT */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+      >
         {/* Left 7 Cols: Official AI Host Broadcast Console */}
-        <div className="lg:col-span-7 bg-[#FFFFFF] border-2 border-[#1A1A1A] p-6 sm:p-7 shadow-[4px_4px_0px_#1A1A1A] space-y-5">
+        <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#111113] p-6 sm:p-7 shadow-[4px_4px_0px_#111113] space-y-5">
           {/* Header Bar */}
-          <div className="flex items-center justify-between border-b-1.5 border-[#1A1A1A] pb-3 flex-wrap gap-3">
+          <div className="flex items-center justify-between border-b border-[#111113] pb-3 flex-wrap gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#1A1A1A] text-[#F8F7F4] flex items-center justify-center border-1.5 border-[#1A1A1A]">
-                <Bot className="w-5 h-5 text-[#E63946]" />
+              <div className="w-10 h-10 bg-[#111113] text-[#F8F7F4] flex items-center justify-center border border-[#111113]">
+                <Bot className="w-5 h-5 text-[#2563EB]" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-[#1A1A1A] text-sm uppercase tracking-wider">
+                  <h3 className="font-bold text-[#111113] text-sm uppercase tracking-wider">
                     AI_HOST // LIVE BROADCAST
                   </h3>
-                  <span className="px-1.5 py-0.2 text-[9px] bg-[#E63946] text-white font-bold border border-[#1A1A1A]">
+                  <span className="px-1.5 py-0.2 text-[9px] bg-[#2563EB] text-white font-bold border border-[#111113]">
                     NODE: 3.7
                   </span>
                 </div>
@@ -442,10 +587,10 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
             <div className="flex items-center gap-2 text-xs">
               <button
                 onClick={handleToggleVoice}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase transition-colors border-1.5 border-[#1A1A1A] ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase transition-colors border border-[#111113] ${
                   isSpeaking
-                    ? "bg-[#E63946] text-white shadow-[2px_2px_0px_#1A1A1A]"
-                    : "bg-[#FFFFFF] hover:bg-[#1A1A1A] hover:text-[#F8F7F4] text-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]"
+                    ? "bg-[#2563EB] text-white"
+                    : "bg-[#FFFFFF] hover:bg-[#111113] hover:text-[#F8F7F4] text-[#111113]"
                 }`}
               >
                 {isSpeaking ? <Pause className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
@@ -458,7 +603,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                   await triggerAIHostBroadcast("Запрос актуальной сводки хакатона");
                   sound.playBroadcastChime();
                 }}
-                className="px-3 py-1.5 text-xs font-bold uppercase bg-[#F8F7F4] hover:bg-[#1A1A1A] hover:text-[#F8F7F4] text-[#1A1A1A] border-1.5 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] transition-colors"
+                className="px-3 py-1.5 text-xs font-bold uppercase bg-[#F8F7F4] hover:bg-[#111113] hover:text-[#F8F7F4] text-[#111113] border border-[#111113] transition-colors"
               >
                 Сводка
               </button>
@@ -466,28 +611,28 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
           </div>
 
           {/* Speech Bubble with Waveform */}
-          <div className="bg-[#F8F7F4] p-5 border-1.5 border-[#1A1A1A] space-y-3 shadow-[2px_2px_0px_#1A1A1A]">
+          <div className="bg-[#F8F7F4] p-5 border border-[#111113] space-y-3">
             {isSpeaking && (
-              <div className="flex items-center gap-1 text-[#E63946] text-[11px] font-bold uppercase">
-                <span className="w-1.5 h-3 bg-[#E63946] animate-pulse" />
-                <span className="w-1.5 h-4 bg-[#E63946] animate-pulse" style={{ animationDelay: "100ms" }} />
-                <span className="w-1.5 h-2 bg-[#E63946] animate-pulse" style={{ animationDelay: "200ms" }} />
-                <span className="w-1.5 h-5 bg-[#E63946] animate-pulse" style={{ animationDelay: "300ms" }} />
+              <div className="flex items-center gap-1 text-[#2563EB] text-[11px] font-bold uppercase">
+                <span className="w-1.5 h-3 bg-[#2563EB] animate-pulse" />
+                <span className="w-1.5 h-4 bg-[#2563EB] animate-pulse" style={{ animationDelay: "100ms" }} />
+                <span className="w-1.5 h-2 bg-[#2563EB] animate-pulse" style={{ animationDelay: "200ms" }} />
+                <span className="w-1.5 h-5 bg-[#2563EB] animate-pulse" style={{ animationDelay: "300ms" }} />
                 <span className="ml-2 font-mono">Синтез речи активен...</span>
               </div>
             )}
 
-            <div className="text-xs text-[#E63946] font-bold uppercase">
+            <div className="text-xs text-[#2563EB] font-bold uppercase">
               🎙 {latestBroadcast.title}
             </div>
 
-            <p className="text-xs sm:text-sm text-[#1A1A1A] leading-relaxed whitespace-pre-line font-mono">
+            <p className="text-xs sm:text-sm text-[#111113] leading-relaxed whitespace-pre-line font-mono">
               {hostAnswer || latestBroadcast.content}
             </p>
 
-            <div className="pt-2 border-t border-[#1A1A1A] text-[10px] text-[#666] flex items-center justify-between">
+            <div className="pt-2 border-t border-[#111113]/20 text-[10px] text-[#666] flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Radio className="w-3 h-3 text-[#E63946]" />
+                <Radio className="w-3 h-3 text-[#2563EB]" />
                 <span>AI Host комментирует динамику. Оценки выставляют только судьи-люди.</span>
               </span>
               <span>{new Date(latestBroadcast.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -503,12 +648,12 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                 onChange={(e) => setAiHostInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAskHost(aiHostInput)}
                 placeholder="Задайте вопрос AI Host о правилах, дедлайне или командах..."
-                className="flex-1 bg-[#FFFFFF] border-1.5 border-[#1A1A1A] px-4 py-2.5 text-xs text-[#1A1A1A] placeholder-[#888] outline-none shadow-[2px_2px_0px_#1A1A1A]"
+                className="flex-1 bg-[#FFFFFF] border border-[#111113] px-4 py-2.5 text-xs text-[#111113] placeholder-[#888] outline-none"
               />
               <button
                 onClick={() => handleAskHost(aiHostInput)}
                 disabled={isQuerying || !aiHostInput.trim()}
-                className="px-5 py-2.5 bg-[#1A1A1A] hover:bg-[#E63946] text-[#F8F7F4] hover:text-white font-bold text-xs uppercase border-1.5 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                className="px-5 py-2.5 bg-[#111113] hover:bg-[#2563EB] text-[#F8F7F4] hover:text-white font-bold text-xs uppercase border border-[#111113] transition-colors flex items-center gap-1.5 disabled:opacity-50"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Спросить</span>
@@ -521,7 +666,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                 <button
                   key={i}
                   onClick={() => handleAskHost(q)}
-                  className="text-[10px] px-2.5 py-1 bg-[#FFFFFF] hover:bg-[#1A1A1A] hover:text-[#F8F7F4] text-[#1A1A1A] border border-[#1A1A1A] transition-colors font-bold uppercase"
+                  className="text-[10px] px-2.5 py-1 bg-[#FFFFFF] hover:bg-[#111113] hover:text-[#F8F7F4] text-[#111113] border border-[#111113] transition-colors font-bold uppercase"
                 >
                   {q}
                 </button>
@@ -531,14 +676,14 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
         </div>
 
         {/* Right 5 Cols: 1v1 Cyber Duel Arena Spotlight */}
-        <div className="lg:col-span-5 bg-[#FFFFFF] border-2 border-[#1A1A1A] p-6 sm:p-7 shadow-[4px_4px_0px_#1A1A1A] space-y-4">
-          <div className="flex items-center justify-between border-b-1.5 border-[#1A1A1A] pb-3">
+        <div className="lg:col-span-5 bg-[#FFFFFF] border border-[#111113] p-6 sm:p-7 shadow-[4px_4px_0px_#111113] space-y-4">
+          <div className="flex items-center justify-between border-b border-[#111113] pb-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#1A1A1A] text-white flex items-center justify-center border border-[#1A1A1A]">
-                <Swords className="w-4 h-4 text-[#E63946]" />
+              <div className="w-8 h-8 bg-[#111113] text-white flex items-center justify-center border border-[#111113]">
+                <Swords className="w-4 h-4 text-[#2563EB]" />
               </div>
               <div>
-                <h3 className="font-bold text-[#1A1A1A] text-sm uppercase tracking-wider">
+                <h3 className="font-bold text-[#111113] text-sm uppercase tracking-wider">
                   1V1 BATTLE ARENA
                 </h3>
                 <p className="text-[10px] text-[#666]">Быстрые кибер-схватки на 10-15 минут</p>
@@ -550,7 +695,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                 sound.playClick();
                 onNavigateToTab("duel");
               }}
-              className="text-[11px] text-[#E63946] hover:underline uppercase flex items-center gap-1 font-bold"
+              className="text-[11px] text-[#2563EB] hover:underline uppercase flex items-center gap-1 font-bold"
             >
               <span>Вся арена</span>
               <ArrowRight className="w-3 h-3" />
@@ -560,20 +705,20 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
           {activeDuel && activeDuel.participantA && activeDuel.participantB ? (
             <div className="space-y-3">
               {/* Duel Match Card */}
-              <div className="p-4 bg-[#F8F7F4] border-1.5 border-[#1A1A1A] space-y-3 shadow-[2px_2px_0px_#1A1A1A]">
+              <div className="p-4 bg-[#F8F7F4] border border-[#111113] space-y-3">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-[#1A1A1A] font-bold uppercase truncate max-w-[220px]">
+                  <span className="text-[#111113] font-bold uppercase truncate max-w-[220px]">
                     {activeDuel.topic || activeDuel.title || "1v1 Кибер-Дуэль"}
                   </span>
-                  <span className="px-2 py-0.5 text-[9px] bg-[#E63946] text-white font-bold border border-[#1A1A1A] shrink-0">
+                  <span className="px-2 py-0.5 text-[9px] bg-[#2563EB] text-white font-bold border border-[#111113] shrink-0">
                     РАУНД {activeDuel.currentRound || 1} // LIVE
                   </span>
                 </div>
 
                 {/* Contestants Split */}
                 <div className="grid grid-cols-2 gap-3 pt-1 text-center">
-                  <div className="p-3 bg-[#FFFFFF] border-1.5 border-[#1A1A1A]">
-                    <div className="font-bold text-xs text-[#1A1A1A] truncate uppercase">
+                  <div className="p-3 bg-[#FFFFFF] border border-[#111113]">
+                    <div className="font-bold text-xs text-[#111113] truncate uppercase">
                       {activeDuel.participantA?.name || "Участник 1"}
                     </div>
                     <div className="text-[10px] text-[#666] font-bold mt-0.5">
@@ -582,14 +727,14 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                     <button
                       onClick={() => activeDuel.participantA?.id && handleQuickVoteDuel(activeDuel.participantA.id)}
                       disabled={isVoting}
-                      className="mt-2 w-full py-1 text-[10px] font-bold uppercase bg-[#1A1A1A] hover:bg-[#E63946] text-[#F8F7F4] hover:text-white border border-[#1A1A1A] transition-colors"
+                      className="mt-2 w-full py-1 text-[10px] font-bold uppercase bg-[#111113] hover:bg-[#2563EB] text-[#F8F7F4] hover:text-white border border-[#111113] transition-colors"
                     >
                       Голос (+1)
                     </button>
                   </div>
 
-                  <div className="p-3 bg-[#FFFFFF] border-1.5 border-[#1A1A1A]">
-                    <div className="font-bold text-xs text-[#1A1A1A] truncate uppercase">
+                  <div className="p-3 bg-[#FFFFFF] border border-[#111113]">
+                    <div className="font-bold text-xs text-[#111113] truncate uppercase">
                       {activeDuel.participantB?.name || "Участник 2"}
                     </div>
                     <div className="text-[10px] text-[#666] font-bold mt-0.5">
@@ -598,7 +743,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                     <button
                       onClick={() => activeDuel.participantB?.id && handleQuickVoteDuel(activeDuel.participantB.id)}
                       disabled={isVoting}
-                      className="mt-2 w-full py-1 text-[10px] font-bold uppercase bg-[#1A1A1A] hover:bg-[#E63946] text-[#F8F7F4] hover:text-white border border-[#1A1A1A] transition-colors"
+                      className="mt-2 w-full py-1 text-[10px] font-bold uppercase bg-[#111113] hover:bg-[#2563EB] text-[#F8F7F4] hover:text-white border border-[#111113] transition-colors"
                     >
                       Голос (+1)
                     </button>
@@ -606,16 +751,16 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                 </div>
 
                 {voteNotice && (
-                  <div className="text-center text-[10px] font-bold text-[#E63946]">
+                  <div className="text-center text-[10px] font-bold text-[#2563EB]">
                     {voteNotice}
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="p-6 text-center bg-[#F8F7F4] border-1.5 border-[#1A1A1A] space-y-2">
+            <div className="p-6 text-center bg-[#F8F7F4] border border-[#111113] space-y-2">
               <Swords className="w-8 h-8 text-[#888] mx-auto" />
-              <div className="text-xs font-bold text-[#1A1A1A] uppercase">[ДУЭЛЬ_В_ОЖИДАНИИ]</div>
+              <div className="text-xs font-bold text-[#111113] uppercase">[ДУЭЛЬ_В_ОЖИДАНИИ]</div>
               <p className="text-[11px] text-[#666]">
                 Запустите быструю 1v1 дуэль на фронтенд-вёрстку, дизайн или алгоритм.
               </p>
@@ -624,7 +769,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                   sound.playClick();
                   onNavigateToTab("duel");
                 }}
-                className="mt-2 px-4 py-2 text-xs font-bold uppercase bg-[#1A1A1A] hover:bg-[#E63946] text-[#F8F7F4] hover:text-white border-1.5 border-[#1A1A1A] transition-colors shadow-[2px_2px_0px_#1A1A1A]"
+                className="mt-2 px-4 py-2 text-xs font-bold uppercase bg-[#111113] hover:bg-[#2563EB] text-[#F8F7F4] hover:text-white border border-[#111113] transition-colors"
               >
                 Арена Дуэлей →
               </button>
@@ -632,35 +777,49 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
           )}
 
           {/* Observer Mode Banner */}
-          <div className="p-3.5 bg-[#F8F7F4] border-1.5 border-[#1A1A1A] flex items-center justify-between">
+          <div className="p-3.5 bg-[#F8F7F4] border border-[#111113] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-[#E63946]" />
-              <div className="text-[11px] text-[#1A1A1A] font-bold">[OBSERVER STREAM MODE]</div>
+              <Activity className="w-4 h-4 text-[#2563EB]" />
+              <div className="text-[11px] text-[#111113] font-bold">[OBSERVER STREAM MODE]</div>
             </div>
             <button
               onClick={() => {
                 sound.playClick();
                 onNavigateToTab("discovery");
               }}
-              className="text-[10px] font-bold text-[#E63946] hover:underline uppercase"
+              className="text-[10px] font-bold text-[#2563EB] hover:underline uppercase"
             >
               Каталог →
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* 4. LIVE ACTIVITY TELEMETRY & SOCIAL VELOCITY LEADERBOARD */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* 4. EVENT TIMELINE VERTICAL STEPPER */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.11, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <EventTimeline onNavigateToTab={onNavigateToTab} />
+      </motion.div>
+
+      {/* 5. LIVE ACTIVITY TELEMETRY & SOCIAL VELOCITY LEADERBOARD */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+      >
         {/* Left 7 Cols: Real-time Activity Feed */}
-        <div className="lg:col-span-7 bg-[#FFFFFF] border-2 border-[#1A1A1A] p-6 shadow-[4px_4px_0px_#1A1A1A] space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-2 border-b-1.5 border-[#1A1A1A] pb-3">
+        <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#111113] p-6 shadow-[4px_4px_0px_#111113] space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#111113] pb-3">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#1A1A1A] text-white flex items-center justify-center border border-[#1A1A1A]">
-                <Zap className="w-3.5 h-3.5 text-[#E63946]" />
+              <div className="w-7 h-7 bg-[#111113] text-white flex items-center justify-center border border-[#111113]">
+                <Zap className="w-3.5 h-3.5 text-[#2563EB]" />
               </div>
               <div>
-                <h3 className="font-bold text-[#1A1A1A] text-sm uppercase tracking-wider">
+                <h3 className="font-bold text-[#111113] text-sm uppercase tracking-wider">
                   ACTIVITY TELEMETRY FEED
                 </h3>
                 <p className="text-[10px] text-[#666]">Поток событий в реальном времени</p>
@@ -676,10 +835,10 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                     sound.playClick();
                     setEventFilter(f);
                   }}
-                  className={`px-2 py-0.5 font-bold uppercase border border-[#1A1A1A] transition-colors ${
+                  className={`px-2 py-0.5 font-bold uppercase border border-[#111113] transition-colors ${
                     eventFilter === f
-                      ? "bg-[#1A1A1A] text-[#F8F7F4]"
-                      : "bg-[#FFFFFF] text-[#1A1A1A] hover:bg-[#EFECE6]"
+                      ? "bg-[#2563EB] text-white border-[#111113]"
+                      : "bg-[#FFFFFF] text-[#111113] hover:bg-[#EFECE6]"
                   }`}
                 >
                   {f === "ALL" ? "Все" : f === "DEVLOG" ? "Devlog" : f === "MVP" ? "MVP" : f === "TEAM" ? "Команды" : "Дуэли"}
@@ -688,7 +847,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
             </div>
           </div>
 
-          <div className="divide-y divide-[#1A1A1A]/30 max-h-[460px] overflow-y-auto pr-1">
+          <div className="divide-y divide-[#111113]/20 max-h-[460px] overflow-y-auto pr-1">
             {filteredEvents.length > 0 ? (
               filteredEvents.slice(0, 25).map((ev) => {
                 return (
@@ -696,9 +855,9 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                     key={ev.id}
                     className="py-3 px-1 hover:bg-[#F8F7F4] transition-colors flex items-start gap-3 group"
                   >
-                    <span className="w-2 h-2 bg-[#E63946] mt-1.5 shrink-0" />
+                    <span className="w-2 h-2 bg-[#2563EB] mt-1.5 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs text-[#1A1A1A] leading-snug font-mono">
+                      <div className="text-xs text-[#111113] leading-snug font-mono">
                         {ev.message || ev.text}
                       </div>
                       <div className="text-[10px] text-[#666] mt-1 flex items-center gap-2">
@@ -706,7 +865,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
                           {new Date(ev.createdAt || ev.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         {ev.teamName && (
-                          <span className="text-[#1A1A1A] bg-[#EFECE6] px-1.5 py-0.2 border border-[#1A1A1A] font-bold">
+                          <span className="text-[#111113] bg-[#EFECE6] px-1.5 py-0.2 border border-[#111113] font-bold">
                             {ev.teamName}
                           </span>
                         )}
@@ -725,21 +884,21 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
         </div>
 
         {/* Right 5 Cols: Social Velocity Index */}
-        <div className="lg:col-span-5 bg-[#FFFFFF] border-2 border-[#1A1A1A] p-6 shadow-[4px_4px_0px_#1A1A1A] space-y-4">
-          <div className="flex items-center justify-between border-b-1.5 border-[#1A1A1A] pb-3">
+        <div className="lg:col-span-5 bg-[#FFFFFF] border border-[#111113] p-6 shadow-[4px_4px_0px_#111113] space-y-4">
+          <div className="flex items-center justify-between border-b border-[#111113] pb-3">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#1A1A1A] text-white flex items-center justify-center border border-[#1A1A1A]">
-                <TrendingUp className="w-3.5 h-3.5 text-[#E63946]" />
+              <div className="w-7 h-7 bg-[#111113] text-white flex items-center justify-center border border-[#111113]">
+                <TrendingUp className="w-3.5 h-3.5 text-[#2563EB]" />
               </div>
               <div>
-                <h3 className="font-bold text-[#1A1A1A] text-sm uppercase tracking-wider">
+                <h3 className="font-bold text-[#111113] text-sm uppercase tracking-wider">
                   TEAM VELOCITY INDEX
                 </h3>
                 <p className="text-[10px] text-[#666]">Динамика активности и Devlog</p>
               </div>
             </div>
 
-            <span className="text-[9px] uppercase px-1.5 py-0.2 bg-[#EFECE6] text-[#1A1A1A] border border-[#1A1A1A] font-bold">
+            <span className="text-[9px] uppercase px-1.5 py-0.2 bg-[#EFECE6] text-[#111113] border border-[#111113] font-bold">
               [TELEMETRY]
             </span>
           </div>
@@ -748,38 +907,38 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
             {pulseRanking.slice(0, 10).map((team, idx) => (
               <div
                 key={team.name}
-                className={`p-3 border-1.5 border-[#1A1A1A] transition-all flex items-center justify-between gap-3 ${
+                className={`p-3 border border-[#111113] transition-all flex items-center justify-between gap-3 ${
                   idx === 0
-                    ? "bg-[#F8F7F4] shadow-[2px_2px_0px_#E63946]"
+                    ? "bg-[#F8F7F4] shadow-[2px_2px_0px_#2563EB]"
                     : "bg-[#FFFFFF] hover:bg-[#F8F7F4]"
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-6 h-6 flex items-center justify-center font-bold text-xs shrink-0 border border-[#1A1A1A] ${
-                    idx === 0 ? "bg-[#E63946] text-white" :
-                    idx === 1 ? "bg-[#1A1A1A] text-[#F8F7F4]" :
-                    idx === 2 ? "bg-[#0F4C81] text-white" :
-                    "bg-[#EFECE6] text-[#1A1A1A]"
+                  <div className={`w-6 h-6 flex items-center justify-center font-bold text-xs shrink-0 border border-[#111113] ${
+                    idx === 0 ? "bg-[#2563EB] text-white" :
+                    idx === 1 ? "bg-[#111113] text-[#F8F7F4]" :
+                    idx === 2 ? "bg-[#111113] text-white" :
+                    "bg-[#EFECE6] text-[#111113]"
                   }`}>
                     {idx + 1}
                   </div>
 
                   <div className="min-w-0">
-                    <div className="font-bold text-xs text-[#1A1A1A] truncate uppercase">{team.name}</div>
+                    <div className="font-bold text-xs text-[#111113] truncate uppercase">{team.name}</div>
                     <div className="text-[10px] text-[#666] flex items-center gap-1.5 mt-0.5">
                       <span>{team.membersCount} чел.</span>
                       <span>•</span>
                       {team.hasMvp ? (
-                        <span className="text-[#E63946] font-bold">[MVP_READY]</span>
+                        <span className="text-[#2563EB] font-bold">[MVP_READY]</span>
                       ) : (
-                        <span className="text-[#1A1A1A]">[{team.status}]</span>
+                        <span className="text-[#111113]">[{team.status}]</span>
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className="font-bold text-xs text-[#1A1A1A] leading-none">
+                  <div className="font-bold text-xs text-[#111113] leading-none">
                     {team.pulseScore} PTS
                   </div>
                   <div className="text-[8px] text-[#666] uppercase mt-0.5">Velocity</div>
@@ -788,7 +947,7 @@ export const LiveStageDashboard: React.FC<LiveStageDashboardProps> = ({
             ))}
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

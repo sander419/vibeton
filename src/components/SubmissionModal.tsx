@@ -1,12 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { useHackathon } from "../context/HackathonContext";
-import { Send, X, CheckSquare, ExternalLink, Github, Video, Sparkles, ShieldCheck, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { 
+  Send, 
+  X, 
+  CheckSquare, 
+  ExternalLink, 
+  Github, 
+  Video, 
+  Sparkles, 
+  ShieldCheck, 
+  AlertTriangle, 
+  CheckCircle, 
+  Save, 
+  RotateCcw 
+} from "lucide-react";
 import confetti from "canvas-confetti";
 import type { SubmissionGateReport } from "../types";
+import { usePersistentDraft } from "../utils/usePersistentDraft";
 
 interface SubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface SubmissionFormDraft {
+  title: string;
+  tagline: string;
+  demoUrl: string;
+  repoUrl: string;
+  videoUrl: string;
+  description: string;
+  instructions: string;
+  checkMvp: boolean;
+  checkRepo: boolean;
+  checkLive: boolean;
 }
 
 export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose }) => {
@@ -15,21 +42,30 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
   const userProject = projects.find(p => p.teamId === currentUser?.teamId || p.authorId === currentUser?.id);
   const userTeam = teams.find(t => t.id === currentUser?.teamId);
 
-  const [title, setTitle] = useState(userProject?.title || "");
-  const [tagline, setTagline] = useState(userProject?.tagline || "");
-  const [demoUrl, setDemoUrl] = useState(userProject?.demoUrl || "https://");
-  const [repoUrl, setRepoUrl] = useState(userProject?.repoUrl || "https://github.com/");
-  const [videoUrl, setVideoUrl] = useState(userProject?.videoUrl || "");
-  const [description, setDescription] = useState(userProject?.description || "");
-  const [instructions, setInstructions] = useState("1. Откройте Live Demo\n2. Нажмите 'Создать событие' или потестируйте AI Host");
+  const defaultValues: SubmissionFormDraft = {
+    title: userProject?.title || "",
+    tagline: userProject?.tagline || "",
+    demoUrl: userProject?.demoUrl || "https://",
+    repoUrl: userProject?.repoUrl || "https://github.com/",
+    videoUrl: userProject?.videoUrl || "",
+    description: userProject?.description || "",
+    instructions: "1. Откройте Live Demo\n2. Нажмите 'Создать событие' или потестируйте AI Host",
+    checkMvp: true,
+    checkRepo: true,
+    checkLive: true,
+  };
+
+  const {
+    data: formData,
+    updateField,
+    clearDraft,
+    hasDraft,
+    lastSavedTime
+  } = usePersistentDraft<SubmissionFormDraft>("vibathon_submission_form_draft", defaultValues);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Checkboxes
-  const [checkMvp, setCheckMvp] = useState(true);
-  const [checkRepo, setCheckRepo] = useState(true);
-  const [checkLive, setCheckLive] = useState(true);
 
   // Gate Report state
   const [gateReport, setGateReport] = useState<SubmissionGateReport | null>(null);
@@ -40,16 +76,16 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
     const timer = setTimeout(async () => {
       try {
         const rep = await validateSubmissionGate({
-          repoUrl,
-          demoUrl,
-          launchInstructions: instructions,
-          videoUrl,
+          repoUrl: formData.repoUrl,
+          demoUrl: formData.demoUrl,
+          launchInstructions: formData.instructions,
+          videoUrl: formData.videoUrl,
           checklist: {
-            mvpWorks: checkMvp,
-            demoAvailable: checkLive,
-            repoAvailable: checkRepo,
-            instructionsAdded: instructions.trim().length >= 15,
-            videoAdded: !!videoUrl
+            mvpWorks: formData.checkMvp,
+            demoAvailable: formData.checkLive,
+            repoAvailable: formData.checkRepo,
+            instructionsAdded: formData.instructions.trim().length >= 15,
+            videoAdded: !!formData.videoUrl
           }
         });
         setGateReport(rep);
@@ -59,7 +95,7 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [repoUrl, demoUrl, instructions, videoUrl, checkMvp, checkRepo, checkLive, isOpen]);
+  }, [formData, isOpen]);
 
   if (!isOpen) return null;
 
@@ -88,28 +124,29 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !demoUrl.trim() || isSubmitting) return;
+    if (!formData.title.trim() || !formData.demoUrl.trim() || isSubmitting) return;
 
     setErrorMessage(null);
     try {
       setIsSubmitting(true);
       await submitProject({
         projectId: userProject?.id || "proj-new",
-        title,
-        tagline,
-        demoUrl,
-        repoUrl,
-        videoUrl,
-        description,
-        launchInstructions: instructions,
+        title: formData.title,
+        tagline: formData.tagline,
+        demoUrl: formData.demoUrl,
+        repoUrl: formData.repoUrl,
+        videoUrl: formData.videoUrl,
+        description: formData.description,
+        launchInstructions: formData.instructions,
         checklist: {
-          mvpWorks: checkMvp,
-          demoAvailable: checkLive,
-          repoAvailable: checkRepo,
-          instructionsAdded: instructions.trim().length >= 15,
-          videoAdded: !!videoUrl
+          mvpWorks: formData.checkMvp,
+          demoAvailable: formData.checkLive,
+          repoAvailable: formData.checkRepo,
+          instructionsAdded: formData.instructions.trim().length >= 15,
+          videoAdded: !!formData.videoUrl
         }
       });
+      clearDraft();
       setIsSubmittedSuccess(true);
       triggerConfettiAnimation();
       setTimeout(() => {
@@ -134,20 +171,44 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
               <Send className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-base sm:text-lg font-bold text-white font-mono uppercase tracking-wider">Финальная сдача проекта</h3>
                 <span className="px-2 py-0.5 rounded bg-[#c8ff3d]/10 border border-[#c8ff3d]/30 text-[#c8ff3d] text-[10px] uppercase font-bold">
                   Gate Protected
                 </span>
+                {hasDraft && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#1e2436] text-[#8b93ad] text-[10px] font-mono border border-[#2a3148]" title="Черновик автоматически сохранен в локальном хранилище браузера">
+                    <Save className="w-3 h-3 text-[#c8ff3d]" />
+                    <span>Автосохранено</span>
+                    {lastSavedTime && (
+                      <span className="text-white/60">
+                        {lastSavedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </span>
+                    )}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-[#8b93ad] font-mono">
                 Команда: <strong className="text-[#c8ff3d]">{userTeam?.name || "Соло"}</strong> • {currentUser?.name}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-white border border-[#2a3148] transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {hasDraft && (
+              <button
+                type="button"
+                onClick={clearDraft}
+                title="Очистить сохраненный черновик"
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-amber-400 border border-[#2a3148] text-xs font-mono transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Сбросить</span>
+              </button>
+            )}
+            <button onClick={onClose} className="p-2 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-white border border-[#2a3148] transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Form Body */}
@@ -189,8 +250,8 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                 <input
                   type="text"
                   required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={formData.title}
+                  onChange={(e) => updateField("title", e.target.value)}
                   placeholder="PulseOS Vibeathon Platform"
                   className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
                 />
@@ -200,8 +261,8 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                 <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Короткий слоган (Tagline)</label>
                 <input
                   type="text"
-                  value={tagline}
-                  onChange={(e) => setTagline(e.target.value)}
+                  value={formData.tagline}
+                  onChange={(e) => updateField("tagline", e.target.value)}
                   placeholder="Живая платформа с AI Host и непрерывным Devlog"
                   className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
                 />
@@ -216,8 +277,8 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                   <input
                     type="url"
                     required
-                    value={demoUrl}
-                    onChange={(e) => setDemoUrl(e.target.value)}
+                    value={formData.demoUrl}
+                    onChange={(e) => updateField("demoUrl", e.target.value)}
                     placeholder="https://my-app.fix-ed.me"
                     className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#c8ff3d] font-mono"
                   />
@@ -231,8 +292,8 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                   <input
                     type="url"
                     required
-                    value={repoUrl}
-                    onChange={(e) => setRepoUrl(e.target.value)}
+                    value={formData.repoUrl}
+                    onChange={(e) => updateField("repoUrl", e.target.value)}
                     placeholder="https://github.com/..."
                     className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#c8ff3d] font-mono"
                   />
@@ -246,8 +307,8 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                 </label>
                 <input
                   type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
+                  value={formData.videoUrl}
+                  onChange={(e) => updateField("videoUrl", e.target.value)}
                   placeholder="https://youtube.com/... или loom.com/..."
                   className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#c8ff3d] font-mono"
                 />
@@ -257,8 +318,8 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                 <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Описание решения & ключевые фичи</label>
                 <textarea
                   rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={formData.description}
+                  onChange={(e) => updateField("description", e.target.value)}
                   placeholder="Расскажите жюри: что реализовано, какие технологии, как интегрируется в fix-ed.me..."
                   className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl p-3 text-xs text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d] resize-none"
                 />
@@ -268,8 +329,8 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                 <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Инструкция для тестирования / Доступы</label>
                 <textarea
                   rows={2}
-                  value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
+                  value={formData.instructions}
+                  onChange={(e) => updateField("instructions", e.target.value)}
                   placeholder="Тестовый аккаунт: demo / demo, или кнопка быстрого входа..."
                   className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl p-3 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#c8ff3d] resize-none font-mono"
                 />
@@ -327,8 +388,8 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                 <label className="flex items-center gap-2.5 text-xs text-[#DDD] cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={checkMvp}
-                    onChange={(e) => setCheckMvp(e.target.checked)}
+                    checked={formData.checkMvp}
+                    onChange={(e) => updateField("checkMvp", e.target.checked)}
                     className="rounded accent-[#c8ff3d]"
                   />
                   <span>MVP работает и доступен по указанной ссылке</span>
@@ -336,8 +397,8 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                 <label className="flex items-center gap-2.5 text-xs text-[#DDD] cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={checkRepo}
-                    onChange={(e) => setCheckRepo(e.target.checked)}
+                    checked={formData.checkRepo}
+                    onChange={(e) => updateField("checkRepo", e.target.checked)}
                     className="rounded accent-[#c8ff3d]"
                   />
                   <span>Исходный код открыт и закоммичен в репозиторий</span>
@@ -345,30 +406,44 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
                 <label className="flex items-center gap-2.5 text-xs text-[#DDD] cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={checkLive}
-                    onChange={(e) => setCheckLive(e.target.checked)}
+                    checked={formData.checkLive}
+                    onChange={(e) => updateField("checkLive", e.target.checked)}
                     className="rounded accent-[#c8ff3d]"
                   />
                   <span>Проект полностью готов для экспертной оценки жюри</span>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1e2436]">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2.5 rounded-xl text-xs font-mono uppercase text-[#8b93ad] hover:text-white"
-                >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  disabled={!checkMvp || !checkRepo || !checkLive || isSubmitting || (gateReport && !gateReport.overallPass)}
-                  className="px-6 py-2.5 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff5e] disabled:opacity-50 text-[#06070c] font-black font-mono uppercase text-xs shadow-[0_0_15px_rgba(200,255,61,0.3)] flex items-center gap-2 transition-all"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>{isSubmitting ? "Проверка и отправка..." : "Отправить проект"}</span>
-                </button>
+              <div className="flex items-center justify-between pt-3 border-t border-[#1e2436]">
+                <div>
+                  {hasDraft && (
+                    <button
+                      type="button"
+                      onClick={clearDraft}
+                      className="text-[11px] text-[#8b93ad] hover:text-amber-400 underline underline-offset-2 flex items-center gap-1 font-mono sm:hidden"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Сбросить черновик</span>
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2.5 rounded-xl text-xs font-mono uppercase text-[#8b93ad] hover:text-white"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!formData.checkMvp || !formData.checkRepo || !formData.checkLive || isSubmitting || (gateReport && !gateReport.overallPass)}
+                    className="px-6 py-2.5 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff5e] disabled:opacity-50 text-[#06070c] font-black font-mono uppercase text-xs shadow-[0_0_15px_rgba(200,255,61,0.3)] flex items-center gap-2 transition-all"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>{isSubmitting ? "Проверка и отправка..." : "Отправить проект"}</span>
+                  </button>
+                </div>
               </div>
             </>
           )}

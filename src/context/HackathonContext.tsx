@@ -20,9 +20,15 @@ import type {
   LeaderboardItem,
   HackathonStage,
   Role,
+  ThemeMode,
   TeamMatchSuggestion
 } from "../types";
 import { sound } from "../utils/audio";
+import {
+  getBrowserNotificationPermission,
+  requestBrowserNotificationPermission,
+  showNativeBrowserNotification
+} from "../utils/browserNotifications";
 
 interface HackathonContextType {
   hackathon: Hackathon | null;
@@ -43,13 +49,18 @@ interface HackathonContextType {
   judgements: Judgement[];
   chatMessages: ChatMessage[];
   notifications: NotificationItem[];
+  unreadNotificationsCount: number;
+  browserPermission: NotificationPermission;
   leaderboard: LeaderboardItem[];
   currentUser: User | null;
   currentRole: Role;
   isLoading: boolean;
   sseConnected: boolean;
   soundEnabled: boolean;
+  theme: ThemeMode;
   toggleSound: () => void;
+  setTheme: (theme: ThemeMode) => void;
+  toggleTheme: () => void;
   setCurrentUser: (user: User | null) => void;
   setCurrentRole: (role: Role) => void;
   switchActiveUser: (userId: string) => void;
@@ -67,7 +78,20 @@ interface HackathonContextType {
   createPost: (postData: { content: string; polishedContent?: string; mediaType?: any; mediaUrl?: string; status?: any; milestone?: string; category?: any }) => Promise<ProgressPost>;
   reactToPost: (postId: string, emoji: string) => Promise<void>;
   addComment: (postId: string, content: string) => Promise<void>;
-  sendChatMessage: (content: string) => Promise<void>;
+  sendChatMessage: (
+    content: string,
+    options?: {
+      channelId?: string;
+      teamId?: string;
+      isPrivate?: boolean;
+      codeSnippet?: { language: string; code: string };
+      attachmentUrl?: string;
+      attachmentTitle?: string;
+      attachmentType?: 'github' | 'figma' | 'demo' | 'file';
+      replyTo?: { id: string; authorName: string; content: string };
+    }
+  ) => Promise<void>;
+  reactToChatMessage: (messageId: string, emoji: string) => Promise<void>;
   togglePinChatMessage: (messageId: string) => Promise<void>;
   submitProject: (submissionData: any) => Promise<Submission>;
   submitJudgement: (submissionId: string, scores: Record<string, number>, feedback: string) => Promise<void>;
@@ -79,6 +103,11 @@ interface HackathonContextType {
   getAIFinalRecap: () => Promise<FinalShowRecap>;
   resetDemoSeed: () => Promise<void>;
   refreshState: () => Promise<void>;
+  requestBrowserPermission: () => Promise<NotificationPermission>;
+  markNotificationRead: (id: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
+  sendCustomNotification: (notifData: Partial<NotificationItem>) => Promise<NotificationItem>;
+  simulateNotification: (type: 'deadline' | 'mentor' | 'stage' | 'ai') => Promise<void>;
 }
 
 const HackathonContext = createContext<HackathonContextType | undefined>(undefined);
@@ -100,6 +129,7 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [judgements, setJudgements] = useState<Judgement[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [browserPermission, setBrowserPermission] = useState<NotificationPermission>(() => getBrowserNotificationPermission());
   const [leaderboard, setLeaderboard] = useState<LeaderboardItem[]>([]);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -107,6 +137,46 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [sseConnected, setSseConnected] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [theme, setThemeState] = useState<ThemeMode>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("competition_theme");
+      if (saved === "terminal-dark" || saved === "light") {
+        return saved;
+      }
+    }
+    return "light";
+  });
+
+  const setTheme = useCallback((newTheme: ThemeMode) => {
+    setThemeState(newTheme);
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", newTheme);
+      if (newTheme === "terminal-dark") {
+        document.documentElement.classList.add("theme-terminal-dark");
+      } else {
+        document.documentElement.classList.remove("theme-terminal-dark");
+      }
+      localStorage.setItem("competition_theme", newTheme);
+    }
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    const next = theme === "light" ? "terminal-dark" : "light";
+    setTheme(next);
+    sound.playPop();
+  }, [theme, setTheme]);
+
+  // Sync theme on initial load
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", theme);
+      if (theme === "terminal-dark") {
+        document.documentElement.classList.add("theme-terminal-dark");
+      } else {
+        document.documentElement.classList.remove("theme-terminal-dark");
+      }
+    }
+  }, [theme]);
 
   const toggleSound = () => {
     const next = !soundEnabled;
@@ -168,6 +238,17 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       eventSource.addEventListener("connected", () => {
         setSseConnected(true);
+      });
+
+      eventSource.addEventListener("notification_created", (e) => {
+        const notif: NotificationItem = JSON.parse(e.data);
+        setNotifications(prev => [notif, ...prev.filter(n => n.id !== notif.id)]);
+        sound.playBroadcastChime();
+        showNativeBrowserNotification({
+          title: notif.title,
+          body: notif.message,
+          tag: notif.id
+        });
       });
 
       eventSource.addEventListener("event_recorded", (e) => {
@@ -245,7 +326,17 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       eventSource.addEventListener("chat_message", (e) => {
         const msg = JSON.parse(e.data);
-        setChatMessages(prev => [...prev, msg]);
+        setChatMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
+      });
+
+      eventSource.addEventListener("chat_reaction_updated", (e) => {
+        const { messageId, reactions } = JSON.parse(e.data);
+        setChatMessages(prev => prev.map(m => m.id === messageId ? { ...m, reactions } : m));
+      });
+
+      eventSource.addEventListener("chat_pinned", (e) => {
+        const updatedMsg = JSON.parse(e.data);
+        setChatMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
       });
 
       eventSource.addEventListener("ai_host_message", (e) => {
@@ -557,19 +648,57 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const sendChatMessage = async (content: string) => {
+  const sendChatMessage = async (
+    content: string,
+    options?: {
+      channelId?: string;
+      teamId?: string;
+      isPrivate?: boolean;
+      codeSnippet?: { language: string; code: string };
+      attachmentUrl?: string;
+      attachmentTitle?: string;
+      attachmentType?: 'github' | 'figma' | 'demo' | 'file';
+      replyTo?: { id: string; authorName: string; content: string };
+    }
+  ) => {
     if (!currentUser) return;
     const res = await fetch("/api/chat/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         authorId: currentUser.id,
-        content
+        content,
+        channelId: options?.channelId || "general",
+        teamId: options?.teamId,
+        isPrivate: options?.isPrivate,
+        codeSnippet: options?.codeSnippet,
+        attachmentUrl: options?.attachmentUrl,
+        attachmentTitle: options?.attachmentTitle,
+        attachmentType: options?.attachmentType,
+        replyTo: options?.replyTo
       })
     });
     const data = await res.json();
     if (data.message) {
-      setChatMessages(prev => [...prev, data.message]);
+      setChatMessages(prev => [...prev.filter(m => m.id !== data.message.id), data.message]);
+      sound.playPop();
+    }
+  };
+
+  const reactToChatMessage = async (messageId: string, emoji: string) => {
+    if (!currentUser) return;
+    const res = await fetch("/api/chat/react", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messageId,
+        emoji,
+        userId: currentUser.id
+      })
+    });
+    const data = await res.json();
+    if (data.message) {
+      setChatMessages(prev => prev.map(m => m.id === messageId ? data.message : m));
       sound.playPop();
     }
   };
@@ -703,8 +832,126 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     sound.playCelebration();
   };
 
+  const requestBrowserPermission = async (): Promise<NotificationPermission> => {
+    const perm = await requestBrowserNotificationPermission();
+    setBrowserPermission(perm);
+    if (perm === "granted") {
+      sound.playCelebration();
+      showNativeBrowserNotification({
+        title: "🔔 PUSH-УВЕДОМЛЕНИЯ АКТИВИРОВАНЫ",
+        body: "Теперь вы будете мгновенно получать предупреждения о дедлайнах и сообщения менторов прямо на рабочий стол."
+      });
+    }
+    return perm;
+  };
+
+  const markNotificationRead = async (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    try {
+      await fetch("/api/notifications/mark-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+    } catch (e) {
+      console.warn("Failed to mark notification read:", e);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    sound.playClick();
+    try {
+      await fetch("/api/notifications/mark-all-read", {
+        method: "POST"
+      });
+    } catch (e) {
+      console.warn("Failed to mark all notifications read:", e);
+    }
+  };
+
+  const sendCustomNotification = async (notifData: Partial<NotificationItem>): Promise<NotificationItem> => {
+    const res = await fetch("/api/notifications/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(notifData)
+    });
+    const data = await res.json();
+    if (data.notification) {
+      setNotifications(prev => [data.notification, ...prev.filter(n => n.id !== data.notification.id)]);
+      sound.playBroadcastChime();
+      showNativeBrowserNotification({
+        title: data.notification.title,
+        body: data.notification.message,
+        tag: data.notification.id
+      });
+      return data.notification;
+    }
+    throw new Error(data.error || "Не удалось отправить уведомление");
+  };
+
+  const simulateNotification = async (type: 'deadline' | 'mentor' | 'stage' | 'ai') => {
+    let payload: Partial<NotificationItem> = {};
+
+    if (type === 'deadline') {
+      payload = {
+        type: 'DEADLINE_WARNING',
+        category: 'deadline',
+        title: '⏳ ПРЕДУПРЕЖДЕНИЕ: 1 ЧАС ДО ДЕДЛАЙНА!',
+        message: 'Прием работ на «Вайбатон №2» завершается через 60 минут. Обязательно проверьте ссылку на видеодемо и README.',
+        link: '#submit',
+        actionTab: 'submit',
+        priority: 'urgent',
+        senderName: 'Event Chrono Gate',
+        senderRole: 'organizer'
+      };
+    } else if (type === 'mentor') {
+      const mentors = users.filter(u => u.role === 'judge') || [];
+      const mentor = mentors[0] || { name: 'Елена Романова', role: 'judge', avatar: '' };
+      payload = {
+        type: 'MENTOR_MESSAGE',
+        category: 'mentor',
+        title: `👨‍🏫 НОВОЕ СООБЩЕНИЕ МЕНТОРА: ${mentor.name.toUpperCase()}`,
+        message: '«Командам: протестируйте сценарий отказа сети в сокетах. Жюри ценит обработку краевых случаев и чистый UI/UX».',
+        link: '#chat',
+        actionTab: 'chat',
+        priority: 'high',
+        senderName: mentor.name,
+        senderRole: mentor.role,
+        senderAvatar: mentor.avatar
+      };
+    } else if (type === 'stage') {
+      payload = {
+        type: 'STAGE_CHANGE',
+        category: 'stage',
+        title: '⚡ СМЕНА СТАТУСА: ЭТАП [SUBMISSION] ОТКРЫТ',
+        message: 'Прием финальных проектов официально стартовал. Форма валидации репозитория и чеклист MVP активны.',
+        link: '#submit',
+        actionTab: 'submit',
+        priority: 'urgent',
+        senderName: 'Competition OS Core',
+        senderRole: 'system'
+      };
+    } else if (type === 'ai') {
+      payload = {
+        type: 'AI_BROADCAST',
+        category: 'ai',
+        title: '🎙️ AI HOST: ВЫПУЩЕН LIVE-ОБЗОР ЭКВАТОРА',
+        message: 'AI Host проанализировал темп хакатона. Опубликована аналитика активности постов и готовности MVP.',
+        link: '#live',
+        actionTab: 'live',
+        priority: 'normal',
+        senderName: 'AI Host Gemini 3.7',
+        senderRole: 'system'
+      };
+    }
+
+    await sendCustomNotification(payload);
+  };
+
   const activeDuel = duels[activeEventId] || duels["duel-42"] || null;
   const activeRecap = recaps[activeEventId] || null;
+  const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <HackathonContext.Provider
@@ -727,13 +974,18 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         judgements,
         chatMessages,
         notifications,
+        unreadNotificationsCount,
+        browserPermission,
         leaderboard,
         currentUser,
         currentRole,
         isLoading,
         sseConnected,
         soundEnabled,
+        theme,
         toggleSound,
+        setTheme,
+        toggleTheme,
         setCurrentUser,
         setCurrentRole,
         switchActiveUser,
@@ -752,6 +1004,7 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         reactToPost,
         addComment,
         sendChatMessage,
+        reactToChatMessage,
         togglePinChatMessage,
         submitProject,
         submitJudgement,
@@ -762,7 +1015,12 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         matchTeamAI,
         getAIFinalRecap,
         resetDemoSeed,
-        refreshState
+        refreshState,
+        requestBrowserPermission,
+        markNotificationRead,
+        markAllNotificationsRead,
+        sendCustomNotification,
+        simulateNotification
       }}
     >
       {children}

@@ -31,6 +31,7 @@ export const EventDiscoveryView: React.FC<EventDiscoveryViewProps> = ({
   const [filterType, setFilterType] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   // New Event Form State
   const [newEventTitle, setNewEventTitle] = useState("");
@@ -82,6 +83,7 @@ export const EventDiscoveryView: React.FC<EventDiscoveryViewProps> = ({
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEventTitle.trim()) return;
+    setCreateError(null);
 
     try {
       const created = await createEvent({
@@ -98,7 +100,7 @@ export const EventDiscoveryView: React.FC<EventDiscoveryViewProps> = ({
       setNewEventTheme("");
       if (onSelectEvent) onSelectEvent(created.id);
     } catch (err: any) {
-      alert(err.message || "Ошибка при создании события");
+      setCreateError(err.message || "Ошибка при создании события");
     }
   };
 
@@ -365,6 +367,12 @@ export const EventDiscoveryView: React.FC<EventDiscoveryViewProps> = ({
                   />
                 </div>
               </div>
+
+              {createError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-mono">
+                  {createError}
+                </div>
+              )}
 
               <div className="pt-4 border-t border-[#222] flex items-center justify-end gap-3">
                 <button

@@ -608,42 +608,125 @@ function generateInitialStore(): Store {
     {
       id: "msg-1",
       hackathonId: "vibeathon-2",
+      channelId: "general",
       authorId: "usr-admin",
       authorName: "Алексей Смирнов",
       authorAvatar: users[0].avatar,
       authorRole: "organizer",
       content: "Всем привет! Рады приветствовать участников на Вайбатоне №2. Правила в шапке, пишите любые вопросы сюда или в Devlog!",
       isPinned: true,
+      reactions: { "🔥": ["usr-1", "usr-2", "usr-3"], "🚀": ["usr-admin"] },
       createdAt: new Date(Date.now() - 2.4 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "msg-ann-1",
+      hackathonId: "vibeathon-2",
+      channelId: "announcements",
+      authorId: "usr-admin",
+      authorName: "Алексей Смирнов",
+      authorAvatar: users[0].avatar,
+      authorRole: "organizer",
+      content: "⚡️ ВАЖНЫЙ АНОНС: Открыт чекпоинт архитектуры и регистрации репозиториев. Все команды должны привязать рабочий репозиторий в панели проекта до 18:00.",
+      isPinned: true,
+      reactions: { "📌": ["usr-1", "usr-4"], "👍": ["usr-2", "usr-3", "usr-5"] },
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
     },
     {
       id: "msg-2",
       hackathonId: "vibeathon-2",
+      channelId: "general",
       authorId: "usr-1",
       authorName: "Иван Ковалев",
       authorAvatar: users[3].avatar,
       authorRole: "participant",
       content: "Всем удачи! Мы в Team Pulse только что выкатили обновление по Devlog-постингу. Проверяйте ленту 🔥",
+      reactions: { "⚡": ["usr-2", "usr-3"] },
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "msg-ment-1",
+      hackathonId: "vibeathon-2",
+      channelId: "mentors",
+      authorId: "usr-judge-2",
+      authorName: "Елена Романова",
+      authorAvatar: users[2].avatar,
+      authorRole: "judge",
+      content: "Менторы на связи! Если у кого-то есть сомнения по поводу AI-пайплайна или оптимизации времени инференса — тегайте меня здесь.",
+      isPinned: true,
+      reactions: { "🙌": ["usr-1", "usr-4"] },
+      createdAt: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000).toISOString()
     },
     {
       id: "msg-3",
       hackathonId: "vibeathon-2",
+      channelId: "general",
       authorId: "usr-3",
       authorName: "Максим Орлов",
       authorAvatar: users[5].avatar,
       authorRole: "participant",
       content: "Работа кипит! На сокетах держится супер-стабильно. Кто тоже соло пилит?",
+      reactions: { "💪": ["usr-1"] },
       createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "msg-team1-1",
+      hackathonId: "vibeathon-2",
+      channelId: "team_team-1",
+      teamId: "team-1",
+      isPrivate: true,
+      authorId: "usr-1",
+      authorName: "Иван Ковалев",
+      authorAvatar: users[3].avatar,
+      authorRole: "participant",
+      content: "Команда, привет в нашем защищенном штабе! @София, как прогресс со звуковым движком и Web Speech API?",
+      reactions: { "🚀": ["usr-2"] },
+      createdAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "msg-team1-2",
+      hackathonId: "vibeathon-2",
+      channelId: "team_team-1",
+      teamId: "team-1",
+      isPrivate: true,
+      authorId: "usr-2",
+      authorName: "София Морозова",
+      authorAvatar: users[4].avatar,
+      authorRole: "participant",
+      content: "Собрала хук useSynthesizer с поддержкой паузы и тембра AI Host! Вот фрагмент вызова:",
+      codeSnippet: {
+        language: "typescript",
+        code: "const audio = sound.playBroadcastChime();\nspeakText(announcement, { voice: 'alloy', rate: 1.05 });"
+      },
+      reactions: { "🔥": ["usr-1"], "💯": ["usr-1"] },
+      createdAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "msg-team1-3",
+      hackathonId: "vibeathon-2",
+      channelId: "team_team-1",
+      teamId: "team-1",
+      isPrivate: true,
+      authorId: "usr-1",
+      authorName: "Иван Ковалев",
+      authorAvatar: users[3].avatar,
+      authorRole: "participant",
+      content: "Отлично! Я подвязал автоматическую верификацию деплоя. Фиксируем этот таск в чек-листе к дедлайну.",
+      attachmentTitle: "GitHub Repo: Team Pulse PulseOS",
+      attachmentUrl: "https://github.com/vibeathon/pulse-station",
+      attachmentType: "github",
+      reactions: { "✨": ["usr-2"] },
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
     },
     {
       id: "msg-4",
       hackathonId: "vibeathon-2",
+      channelId: "general",
       authorId: "usr-judge-2",
       authorName: "Елена Романова",
       authorAvatar: users[2].avatar,
       authorRole: "judge",
       content: "Напоминаю: при оценке дизайна мы обращаем особое внимание на читаемость таймеров, типографику и удобство публикации с мобильных.",
+      reactions: { "💡": ["usr-1", "usr-2"] },
       createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
     }
   ];
@@ -652,10 +735,62 @@ function generateInitialStore(): Store {
     {
       id: "notif-1",
       userId: "usr-1",
-      type: "AI_UPDATE",
-      title: "AI Host опубликовал сводку",
-      message: "AI Host подвел итоги первых 48 часов хакатона.",
+      type: "DEADLINE_WARNING",
+      category: "deadline",
+      title: "⏳ ПРЕДУПРЕЖДЕНИЕ: ДО ДЕДЛАЙНА 4 ЧАСА",
+      message: "Прием финальных проектов завершается сегодня в 18:00 (МСК). Проверьте чеклист MVP, ссылку на открытый Git-репозиторий и демо-стенд.",
+      link: "#submit",
+      actionTab: "submit",
+      priority: "urgent",
+      senderName: "Event Chrono Gate",
+      senderRole: "organizer",
       isRead: false,
+      createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() // 30 min ago
+    },
+    {
+      id: "notif-2",
+      userId: "usr-1",
+      type: "MENTOR_MESSAGE",
+      category: "mentor",
+      title: "👨‍🏫 СОВЕТ МЕНТОРА: ЕЛЕНА РОМАНОВА",
+      message: "«Обратите внимание на критерий UI/UX и читаемость таймеров: жюри тестирует с мобильных устройств. Запишите короткий 2-минутный скринкаст с демонстрацией ключевого сценария».",
+      link: "#chat",
+      actionTab: "chat",
+      priority: "high",
+      senderName: "Елена Романова",
+      senderRole: "judge",
+      senderAvatar: users[2]?.avatar,
+      isRead: false,
+      createdAt: new Date(Date.now() - 2.5 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "notif-3",
+      userId: "usr-1",
+      type: "STAGE_CHANGE",
+      category: "stage",
+      title: "⚡ СТАТУС СОСТЯЗАНИЯ: ЭТАП [ACTIVE]",
+      message: "Вайбатон №2 перешел в фазу активной разработки и постов. Devlog-лента открыта для публикации микро-апдейтов.",
+      link: "#live",
+      actionTab: "live",
+      priority: "normal",
+      senderName: "Competition OS Core",
+      senderRole: "system",
+      isRead: true,
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "notif-4",
+      userId: "usr-1",
+      type: "AI_BROADCAST",
+      category: "ai",
+      title: "🎙️ AI HOST: ВЫПУЩЕН ЭКВАТОР-РЕКАП",
+      message: "AI Host провел анализ скорости команд. Team Pulse первыми достигли рабочего MVP прототипа.",
+      link: "#live",
+      actionTab: "live",
+      priority: "normal",
+      senderName: "AI Host Gemini 3.7",
+      senderRole: "system",
+      isRead: true,
       createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
     }
   ];
@@ -1286,6 +1421,34 @@ app.post("/api/events/control", (req, res) => {
     recordEvent("STAGE_CHANGED", `Этап события "${ev.title}" изменен на: ${stage}`, {
       metadata: { eventId: ev.id, oldStage, newStage: stage }
     });
+
+    // Automatically generate system stage change notification
+    const stageTitles: Record<string, string> = {
+      REGISTRATION: "Открыта регистрация участников",
+      ACTIVE: "Старт активной фазы хакатона (ACTIVE)",
+      SUBMISSION: "Открыт прием финальных проектов (SUBMISSION)",
+      JUDGING: "Началась экспертиза и судейство (JUDGING)",
+      RESULTS: "Опубликованы финальные результаты (RESULTS)",
+      ARCHIVED: "Событие завершено и заархивировано"
+    };
+
+    const notif: NotificationItem = {
+      id: `notif-stage-${Date.now()}`,
+      type: "STAGE_CHANGE",
+      category: "stage",
+      title: `⚡ СМЕНА ЭТАПА: [${stage}]`,
+      message: `Событие "${ev.title}": ${stageTitles[stage] || `переход на этап ${stage}`}. Проверьте таймлайн состязания.`,
+      link: "#live",
+      actionTab: "live",
+      priority: stage === "SUBMISSION" || stage === "RESULTS" ? "urgent" : "high",
+      senderName: "Competition Chrono OS",
+      senderRole: "system",
+      isRead: false,
+      createdAt: new Date().toISOString()
+    };
+
+    store.notifications.unshift(notif);
+    broadcastSSE("notification_created", notif);
   }
 
   broadcastSSE("event_updated", ev);
@@ -1802,29 +1965,146 @@ app.post("/api/posts/comment", (req, res) => {
 
 // Send Chat Message
 app.post("/api/chat/send", (req, res) => {
-  const { authorId, content } = req.body;
+  const { authorId, content, channelId, teamId, isPrivate, codeSnippet, attachmentUrl, attachmentTitle, attachmentType, replyTo } = req.body;
   const author = store.users.find(u => u.id === authorId);
 
-  if (!content) {
+  if (!content && !codeSnippet?.code && !attachmentUrl) {
     return res.status(400).json({ error: "Текст сообщения не может быть пустым" });
   }
 
   const newMsg: ChatMessage = {
     id: `msg-${Date.now()}`,
     hackathonId: store.hackathon.id,
+    channelId: channelId || "general",
+    teamId: teamId || (channelId?.startsWith("team_") ? channelId.replace("team_", "") : undefined),
+    isPrivate: isPrivate || !!channelId?.startsWith("team_"),
     authorId: authorId || "guest",
     authorName: author?.name || "Гость",
     authorAvatar: author?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=guest`,
     authorRole: author?.role || "guest",
-    content,
+    content: content || "",
+    codeSnippet: codeSnippet && codeSnippet.code ? codeSnippet : undefined,
+    attachmentUrl: attachmentUrl || undefined,
+    attachmentTitle: attachmentTitle || undefined,
+    attachmentType: attachmentType || undefined,
+    reactions: {},
+    replyTo: replyTo || undefined,
     createdAt: new Date().toISOString()
   };
 
   store.chatMessages.push(newMsg);
-  if (store.chatMessages.length > 200) store.chatMessages.shift();
+  if (store.chatMessages.length > 250) store.chatMessages.shift();
+
+  // If author is a judge, organizer, or mentor in public channels, generate notification
+  if (author && (author.role === "judge" || author.role === "organizer" || author.role === "admin") && !newMsg.isPrivate) {
+    const isMentor = author.role === "judge";
+    const notif: NotificationItem = {
+      id: `notif-chat-${Date.now()}`,
+      type: isMentor ? "MENTOR_MESSAGE" : "ORGANIZER_ANNOUNCEMENT",
+      category: isMentor ? "mentor" : "system",
+      title: isMentor ? `👨‍🏫 СООБЩЕНИЕ МЕНТОРА: ${author.name.toUpperCase()}` : `📢 ОБЪЯВЛЕНИЕ ОРГАНИЗАТОРА: ${author.name.toUpperCase()}`,
+      message: content.length > 140 ? `${content.slice(0, 140)}...` : content,
+      link: "#chat",
+      actionTab: "chat",
+      priority: isMentor ? "high" : "urgent",
+      senderName: author.name,
+      senderRole: author.role,
+      senderAvatar: author.avatar,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    };
+    store.notifications.unshift(notif);
+    if (store.notifications.length > 50) store.notifications.pop();
+    broadcastSSE("notification_created", notif);
+  }
 
   broadcastSSE("chat_message", newMsg);
   res.json({ message: newMsg });
+});
+
+// React to Chat Message
+app.post("/api/chat/react", (req, res) => {
+  const { messageId, emoji, userId } = req.body;
+  const msg = store.chatMessages.find(m => m.id === messageId);
+  if (!msg) return res.status(404).json({ error: "Сообщение не найдено" });
+
+  if (!msg.reactions) msg.reactions = {};
+  if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+
+  const existingIdx = msg.reactions[emoji].indexOf(userId);
+  if (existingIdx > -1) {
+    msg.reactions[emoji].splice(existingIdx, 1);
+    if (msg.reactions[emoji].length === 0) {
+      delete msg.reactions[emoji];
+    }
+  } else {
+    msg.reactions[emoji].push(userId);
+  }
+
+  broadcastSSE("chat_reaction_updated", { messageId, reactions: msg.reactions });
+  res.json({ success: true, message: msg });
+});
+
+// Pin/Unpin Chat Message
+app.post("/api/chat/pin", (req, res) => {
+  const { messageId } = req.body;
+  const msg = store.chatMessages.find(m => m.id === messageId);
+  if (!msg) return res.status(404).json({ error: "Сообщение не найдено" });
+
+  msg.isPinned = !msg.isPinned;
+  broadcastSSE("chat_pinned", msg);
+  res.json({ success: true, message: msg });
+});
+
+// Notifications Endpoints
+app.get("/api/notifications", (req, res) => {
+  res.json({ notifications: store.notifications });
+});
+
+app.post("/api/notifications/mark-read", (req, res) => {
+  const { id } = req.body;
+  const notif = store.notifications.find(n => n.id === id);
+  if (notif) {
+    notif.isRead = true;
+  }
+  res.json({ success: true, notification: notif });
+});
+
+app.post("/api/notifications/mark-all-read", (req, res) => {
+  store.notifications.forEach(n => {
+    n.isRead = true;
+  });
+  res.json({ success: true, notifications: store.notifications });
+});
+
+app.post("/api/notifications/send", (req, res) => {
+  const { type, category, title, message, link, actionTab, priority, senderName, senderRole, senderAvatar } = req.body;
+
+  if (!title || !message) {
+    return res.status(400).json({ error: "Заголовок и текст уведомления обязательны" });
+  }
+
+  const notif: NotificationItem = {
+    id: `notif-${Date.now()}`,
+    type: type || "SYSTEM",
+    category: category || "system",
+    title,
+    message,
+    link: link || undefined,
+    actionTab: actionTab || undefined,
+    priority: priority || "normal",
+    senderName: senderName || "Competition OS",
+    senderRole: senderRole || "system",
+    senderAvatar: senderAvatar || undefined,
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+
+  store.notifications.unshift(notif);
+  if (store.notifications.length > 50) store.notifications.pop();
+
+  broadcastSSE("notification_created", notif);
+  res.json({ success: true, notification: notif });
 });
 
 // Pin / Unpin Chat Message (Organizer)

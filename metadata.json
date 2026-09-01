@@ -1,6 +1,6 @@
 {
   "name": "Competition OS — Live Event & Battle Engine",
-  "description": "Операционная система для проведения живых цифровых соревнований (Вайбатоны, 1v1 Дуэли, Челленджи, Питчи) с Event Engine, AI Host, судейством и Observer Mode.",
+  "description": "The galaxy's most advanced competition OS for hackathons, 1v1 cyber duels, speed runs, AI Host broadcast, devlogs, and real-time observer mode.",
   "requestFramePermissions": ["camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -16,28 +16,59 @@ import {
   Eye, 
   Plus,
   ExternalLink,
-  Bot
+  Bot,
+  Save,
+  RotateCcw
 } from "lucide-react";
 import { speakText, stopSpeech, sound } from "../utils/audio";
 import type { ProjectStatus } from "../types";
+import { usePersistentDraft } from "../utils/usePersistentDraft";
 
 interface DevlogSectionProps {
   onOpenFastComposer?: () => void;
 }
 
+interface DevlogDraft {
+  content: string;
+  mediaType: 'image' | 'video' | 'link' | 'github' | 'demo' | undefined;
+  mediaUrl: string;
+  status: ProjectStatus;
+  milestone: string;
+  category: any;
+}
+
 export const DevlogSection: React.FC<DevlogSectionProps> = () => {
   const { posts, comments, createPost, reactToPost, addComment, polishPostAI, currentUser, projects, teams } = useHackathon();
 
-  // Inline Composer State
-  const [content, setContent] = useState("");
-  const [mediaType, setMediaType] = useState<'image' | 'video' | 'link' | 'github' | 'demo' | undefined>(undefined);
-  const [mediaUrl, setMediaUrl] = useState("");
-  const [status, setStatus] = useState<ProjectStatus>("BUILDING");
-  const [milestone, setMilestone] = useState("");
-  const [category, setCategory] = useState<any>("architecture");
+  // Persistent Inline Composer State
+  const defaultDraft: DevlogDraft = {
+    content: "",
+    mediaType: undefined,
+    mediaUrl: "",
+    status: "BUILDING",
+    milestone: "",
+    category: "architecture",
+  };
+
+  const {
+    data: draft,
+    updateField,
+    clearDraft,
+    forceSave,
+    hasDraft,
+    isSaving,
+    lastSavedTime,
+    savedAtFormatted,
+    isRestoredFromStorage
+  } = usePersistentDraft<DevlogDraft>("vibathon_devlog_composer_draft", defaultDraft, {
+    autoSaveIntervalMs: 4000,
+    debounceMs: 250
+  });
+
   const [isPolishing, setIsPolishing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [polishedSuggestion, setPolishedSuggestion] = useState<string | null>(null);
+  const [showDraftRestoredBanner, setShowDraftRestoredBanner] = useState(true);
 
   // Comments drawer toggles
   const [activeCommentsPostId, setActiveCommentsPostId] = useState<string | null>(null);
@@ -46,16 +77,16 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
   const reactionsList = ["🔥", "⚡", "🧠", "🚀", "💪", "🎉"];
 
   const handleAIPolish = async () => {
-    if (!content.trim() || isPolishing) return;
+    if (!draft.content.trim() || isPolishing) return;
     sound.playClick();
     try {
       setIsPolishing(true);
-      const res = await polishPostAI(content, status);
+      const res = await polishPostAI(draft.content, draft.status);
       if (res.polished) {
         sound.playBroadcastChime();
         setPolishedSuggestion(res.polished);
-        if (res.milestone) setMilestone(res.milestone);
-        if (res.category) setCategory(res.category);
+        if (res.milestone) updateField("milestone", res.milestone);
+        if (res.category) updateField("category", res.category);
       }
     } catch (e) {
       console.error(e);
@@ -67,33 +98,29 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
   const handleApplyPolished = () => {
     sound.playClick();
     if (polishedSuggestion) {
-      setContent(polishedSuggestion);
+      updateField("content", polishedSuggestion);
       setPolishedSuggestion(null);
     }
   };
 
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() || isSubmitting) return;
+    if (!draft.content.trim() || isSubmitting) return;
     sound.playClick();
 
     try {
       setIsSubmitting(true);
       await createPost({
-        content,
-        polishedContent: polishedSuggestion || content,
-        mediaType,
-        mediaUrl: mediaUrl.trim() ? mediaUrl.trim() : undefined,
-        status,
-        milestone: milestone || "Обновление разработки",
-        category
+        content: draft.content,
+        polishedContent: polishedSuggestion || draft.content,
+        mediaType: draft.mediaType,
+        mediaUrl: draft.mediaUrl.trim() ? draft.mediaUrl.trim() : undefined,
+        status: draft.status,
+        milestone: draft.milestone || "Обновление разработки",
+        category: draft.category
       });
       sound.playSuccess();
-
-      setContent("");
-      setMediaUrl("");
-      setMediaType(undefined);
-      setMilestone("");
+      clearDraft();
       setPolishedSuggestion(null);
     } catch (err) {
       console.error(err);
@@ -134,32 +161,99 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
     <div className="space-y-8 mb-12 font-sans">
       {/* 30-Second Fast Devlog Composer */}
       <div className="bg-[#0e111c] border border-[#1e2436] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden font-mono">
-        <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#1e2436]">
+        <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#1e2436] flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#c8ff3d] text-[#06070c] flex items-center justify-center font-bold shadow-[0_0_15px_rgba(200,255,61,0.35)]">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-display text-base font-bold text-white uppercase tracking-wider">БЫСТРЫЙ DEVLOG</h3>
-              <p className="text-xs text-[#8b93ad]">30 секунд от мысли до публикации в ленту соревнования</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-display text-base font-bold text-white uppercase tracking-wider">БЫСТРЫЙ DEVLOG</h3>
+                
+                {/* Auto-Save & Saved at Timestamp Live Indicator */}
+                {isSaving ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#c8ff3d]/10 text-[#c8ff3d] text-[11px] font-mono border border-[#c8ff3d]/30 animate-pulse">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Автосохранение...</span>
+                  </span>
+                ) : lastSavedTime ? (
+                  <span 
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#121627] text-[#8b93ad] text-[11px] font-mono border border-[#2a3148] shadow-sm"
+                    title={`Черновик автоматически сохранен в локальном хранилище: ${lastSavedTime.toLocaleString()}`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c8ff3d]" />
+                    <Save className="w-3 h-3 text-[#c8ff3d]" />
+                    <span className="text-white/90 font-medium">Saved at {savedAtFormatted}</span>
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-xs text-[#8b93ad]">Непрерывное автосохранение черновика каждые несколько секунд</p>
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-xs text-[#8b93ad]">
-            <span>Автор:</span>
-            <span className="text-[#c8ff3d] font-bold">{currentUser?.name || "Участник"}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {hasDraft && (
+              <>
+                <button
+                  type="button"
+                  onClick={forceSave}
+                  title="Принудительно сохранить состояние черновика прямо сейчас"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-[#c8ff3d] border border-[#2a3148] text-xs font-mono transition-colors"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Сохранить</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={clearDraft}
+                  title="Очистить сохраненный черновик"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-amber-400 border border-[#2a3148] text-xs font-mono transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Сбросить</span>
+                </button>
+              </>
+            )}
+            <div className="hidden md:flex items-center gap-2 text-xs text-[#8b93ad] pl-2 border-l border-[#1e2436]">
+              <span>Автор:</span>
+              <span className="text-[#c8ff3d] font-bold">{currentUser?.name || "Участник"}</span>
+            </div>
           </div>
         </div>
 
+        {/* Restored Draft Notification Banner */}
+        {isRestoredFromStorage && showDraftRestoredBanner && hasDraft && draft.content.trim().length > 0 && (
+          <div className="mb-4 p-3 rounded-2xl bg-[#121627] border border-[#c8ff3d]/30 text-xs flex items-center justify-between text-[#c8ff3d] gap-3 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#c8ff3d] shrink-0" />
+              <span>
+                Восстановлен ранее сохраненный черновик {savedAtFormatted ? `(Saved at ${savedAtFormatted})` : ""}. Прогресс не потерян при перезагрузке страницы.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDraftRestoredBanner(false)}
+              className="text-[#8b93ad] hover:text-white text-[11px] underline uppercase shrink-0"
+            >
+              Скрыть
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmitPost} className="space-y-4">
           <div className="space-y-2">
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Что только что сделали? (например: привязал WebSocket к таймеру и протестировал рендеринг)..."
-              rows={3}
-              className="w-full bg-[#0a0c14] border border-[#2a3148] focus:border-[#c8ff3d] rounded-2xl p-4 text-xs sm:text-sm text-white placeholder-[#5c647e] outline-none transition-colors"
-            />
+            <div className="relative">
+              <textarea
+                value={draft.content}
+                onChange={(e) => updateField("content", e.target.value)}
+                placeholder="Что только что сделали? (например: привязал WebSocket к таймеру и протестировал рендеринг)..."
+                rows={3}
+                className="w-full bg-[#0a0c14] border border-[#2a3148] focus:border-[#c8ff3d] rounded-2xl p-4 text-xs sm:text-sm text-white placeholder-[#5c647e] outline-none transition-colors"
+              />
+              <div className="absolute bottom-3 right-3 text-[10px] text-[#5c647e] font-mono pointer-events-none">
+                {draft.content.length} симв. • {draft.content.trim() ? draft.content.trim().split(/\s+/).length : 0} сл.
+              </div>
+            </div>
           </div>
 
           {/* AI Polish Live Preview */}
@@ -184,17 +278,94 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
             </div>
           )}
 
+          {/* Optional Attachments Bar */}
+          <div className="space-y-3 pt-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] text-[#8b93ad]">Вложения & вехи:</span>
+              <button
+                type="button"
+                onClick={() => updateField("mediaType", draft.mediaType === "image" ? undefined : "image")}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono flex items-center gap-1.5 transition-colors ${
+                  draft.mediaType === "image"
+                    ? "bg-[#c8ff3d] text-[#06070c] font-bold"
+                    : "bg-[#0a0c14] text-[#8b93ad] border border-[#2a3148] hover:text-white"
+                }`}
+              >
+                <ImageIcon className="w-3 h-3" />
+                <span>Скриншот</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => updateField("mediaType", draft.mediaType === "demo" ? undefined : "demo")}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono flex items-center gap-1.5 transition-colors ${
+                  draft.mediaType === "demo"
+                    ? "bg-[#41f0ff] text-[#06070c] font-bold"
+                    : "bg-[#0a0c14] text-[#8b93ad] border border-[#2a3148] hover:text-white"
+                }`}
+              >
+                <PlaySquare className="w-3 h-3" />
+                <span>Демо-ссылка</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => updateField("mediaType", draft.mediaType === "github" ? undefined : "github")}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono flex items-center gap-1.5 transition-colors ${
+                  draft.mediaType === "github"
+                    ? "bg-white text-[#06070c] font-bold"
+                    : "bg-[#0a0c14] text-[#8b93ad] border border-[#2a3148] hover:text-white"
+                }`}
+              >
+                <Github className="w-3 h-3" />
+                <span>GitHub коммит</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => updateField("mediaType", draft.mediaType === "link" ? undefined : "link")}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono flex items-center gap-1.5 transition-colors ${
+                  draft.mediaType === "link"
+                    ? "bg-[#ffb020] text-[#06070c] font-bold"
+                    : "bg-[#0a0c14] text-[#8b93ad] border border-[#2a3148] hover:text-white"
+                }`}
+              >
+                <LinkIcon className="w-3 h-3" />
+                <span>Ссылка</span>
+              </button>
+            </div>
+
+            {/* Media URL Input if chosen */}
+            {draft.mediaType && (
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={draft.mediaUrl}
+                  onChange={(e) => updateField("mediaUrl", e.target.value)}
+                  placeholder={
+                    draft.mediaType === "image"
+                      ? "URL скриншота (https://...)"
+                      : draft.mediaType === "github"
+                      ? "URL коммита/PR (https://github.com/...)"
+                      : "URL (https://...)"
+                  }
+                  className="flex-1 bg-[#0a0c14] border border-[#2a3148] focus:border-[#c8ff3d] rounded-xl px-3.5 py-1.5 text-xs text-white placeholder-[#5c647e] outline-none"
+                />
+              </div>
+            )}
+          </div>
+
           {/* Controls Bar: Status + AI Polish + Submit */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[#1e2436]/60">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs text-[#8b93ad]">Статус:</span>
               {(["IDEA", "BUILDING", "MVP", "DEMO", "SUBMITTED"] as ProjectStatus[]).map((st) => (
                 <button
                   key={st}
                   type="button"
-                  onClick={() => setStatus(st)}
+                  onClick={() => updateField("status", st)}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    status === st
+                    draft.status === st
                       ? "bg-[#c8ff3d] text-[#06070c] shadow-[0_0_10px_rgba(200,255,61,0.3)]"
                       : "bg-[#0a0c14] text-[#8b93ad] border border-[#2a3148] hover:text-white"
                   }`}
@@ -208,7 +379,7 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
               <button
                 type="button"
                 onClick={handleAIPolish}
-                disabled={!content.trim() || isPolishing}
+                disabled={!draft.content.trim() || isPolishing}
                 className="px-4 py-2 rounded-xl bg-[#0a0c14] hover:bg-[#121627] text-[#41f0ff] border border-[#41f0ff]/30 hover:border-[#41f0ff] text-xs font-bold uppercase transition-all flex items-center gap-1.5 disabled:opacity-50"
               >
                 {isPolishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
@@ -217,7 +388,7 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
 
               <button
                 type="submit"
-                disabled={!content.trim() || isSubmitting}
+                disabled={!draft.content.trim() || isSubmitting}
                 className="px-5 py-2 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff66] text-[#06070c] text-xs font-extrabold uppercase shadow-[0_0_15px_rgba(200,255,61,0.35)] transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
