@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { HackathonProvider, useHackathon } from "./context/HackathonContext";
 import { Header } from "./components/Header";
 import { LiveStageDashboard } from "./components/LiveStageDashboard";
+import { EventDiscoveryView } from "./components/EventDiscoveryView";
+import { DuelStageView } from "./components/DuelStageView";
+import { ObserverModeOverlay } from "./components/ObserverModeOverlay";
 import { AIHostFloatingCompanion } from "./components/AIHostFloatingCompanion";
 import { DevlogSection } from "./components/DevlogSection";
 import { ProjectsTeamsSection } from "./components/ProjectsTeamsSection";
@@ -12,13 +15,15 @@ import { Leaderboard } from "./components/Leaderboard";
 import { AskHostModal } from "./components/AskHostModal";
 import { SubmissionModal } from "./components/SubmissionModal";
 import { RegisterModal } from "./components/RegisterModal";
-import { Sparkles, ExternalLink, ShieldCheck } from "lucide-react";
+import { ShieldCheck, ExternalLink } from "lucide-react";
 
 const MainAppContent: React.FC = () => {
+  const { activeDuel, hackathon } = useHackathon();
   const [activeTab, setActiveTab] = useState<string>("live");
   const [isAskHostOpen, setIsAskHostOpen] = useState<boolean>(false);
   const [isSubmissionOpen, setIsSubmissionOpen] = useState<boolean>(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState<boolean>(false);
+  const [isObserverOpen, setIsObserverOpen] = useState<boolean>(false);
 
   const handleOpenFastDevlog = () => {
     setActiveTab("devlog");
@@ -26,16 +31,17 @@ const MainAppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#E0E0E0] font-mono flex flex-col selection:bg-[#BAFF00] selection:text-black">
-      {/* Top Header */}
+    <div className="min-h-screen bg-[#F8F7F4] text-[#1A1A1A] font-mono flex flex-col selection:bg-[#E63946] selection:text-white">
+      {/* Top Header with Industrial System Branding */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenFastDevlog={handleOpenFastDevlog}
         onOpenRegister={() => setIsRegisterOpen(true)}
+        onOpenObserverMode={() => setIsObserverOpen(true)}
       />
 
-      {/* Main Container */}
+      {/* Main App Switcher Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 font-mono">
         {activeTab === "live" && (
           <LiveStageDashboard
@@ -44,6 +50,18 @@ const MainAppContent: React.FC = () => {
             onOpenRegister={() => setIsRegisterOpen(true)}
             onNavigateToTab={setActiveTab}
           />
+        )}
+
+        {activeTab === "discovery" && (
+          <EventDiscoveryView
+            onSelectEvent={(eventId) => {
+              setActiveTab("live");
+            }}
+          />
+        )}
+
+        {activeTab === "duel" && (
+          <DuelStageView />
         )}
 
         {activeTab === "leaderboard" && (
@@ -87,27 +105,29 @@ const MainAppContent: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="mt-auto border-t border-[#333] bg-[#0A0A0A] py-8 px-4 text-xs text-[#888] font-mono">
+      {/* Industrial Footer */}
+      <footer className="mt-auto border-t-2 border-[#1A1A1A] bg-[#F8F7F4] py-6 px-4 sm:px-8 text-xs text-[#1A1A1A] font-mono">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-white font-mono uppercase tracking-widest text-sm">
-              ВАЙБАТОН
+            <span className="font-display font-bold text-base uppercase tracking-tight text-[#1A1A1A]">
+              COMPETITION_OS
             </span>
-            <span className="text-[#444]">/</span>
-            <span>Специально для сообщества <strong className="text-white">Fix-Ed</strong></span>
+            <span className="text-[#999] font-bold">/</span>
+            <span className="text-xs text-[#666]">
+              [01] CORE_V.2.0.4 • Специально для сообщества <strong className="text-[#1A1A1A]">Fix-Ed</strong>
+            </span>
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-1.5 text-[#AAA]">
-              <ShieldCheck className="w-4 h-4 text-[#BAFF00]" />
-              <span>AI Host & Human Judges</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#1A1A1A]">
+              <span className="w-2 h-2 rounded-full bg-[#E63946] inline-block" />
+              <span className="font-bold tracking-wider">[SYSTEM_READY]</span>
             </div>
             <a
               href="https://fix-ed.me"
               target="_blank"
               rel="noreferrer"
-              className="text-[#BAFF00] hover:underline flex items-center gap-1 font-mono uppercase text-xs"
+              className="text-[#E63946] hover:underline font-bold flex items-center gap-1 uppercase text-xs"
             >
               <span>fix-ed.me</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -115,6 +135,12 @@ const MainAppContent: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Fullscreen Broadcast Observer Mode Overlay */}
+      <ObserverModeOverlay
+        isOpen={isObserverOpen}
+        onClose={() => setIsObserverOpen(false)}
+      />
 
       {/* Ambient Floating AI Host Companion */}
       <AIHostFloatingCompanion
@@ -152,3 +178,4 @@ export default function App() {
     </HackathonProvider>
   );
 }
+

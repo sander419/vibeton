@@ -8,11 +8,11 @@ import {
   CheckCircle2, 
   Clock, 
   ArrowRight,
-  ShieldAlert,
   Award,
   Zap,
   Code
 } from "lucide-react";
+import { sound } from "../utils/audio";
 
 interface HeroProps {
   onOpenFastDevlog: () => void;
@@ -27,7 +27,7 @@ export const HeroEventSection: React.FC<HeroProps> = ({
   onOpenRegister,
   onNavigateToTab
 }) => {
-  const { hackathon, users, teams, projects, posts, submissions, currentUser } = useHackathon();
+  const { hackathon, users, teams, projects, posts, currentUser } = useHackathon();
 
   // Realtime Countdown State
   const [timeLeft, setTimeLeft] = useState<{
@@ -78,14 +78,14 @@ export const HeroEventSection: React.FC<HeroProps> = ({
   const currentStageIndex = stages.findIndex(s => s.id === hackathon?.stage);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-[#0A0A0A] border border-[#333] p-6 sm:p-10 shadow-2xl mb-8">
+    <div className="relative overflow-hidden rounded-3xl bg-[#0a0c14] border border-[#1e2436] p-6 sm:p-10 shadow-2xl mb-8 font-mono">
       {/* Background Decorative Glows */}
-      <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#BAFF00]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 -right-24 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#c8ff3d]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 -right-24 w-96 h-96 bg-[#41f0ff]/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Stage Stepper Bar */}
       <div className="mb-8 overflow-x-auto pb-2">
-        <div className="flex items-center justify-between min-w-[500px] bg-[#111] p-2 rounded-2xl border border-[#222]">
+        <div className="flex items-center justify-between min-w-[500px] bg-[#0e111c] p-2 rounded-2xl border border-[#1e2436]">
           {stages.map((st, idx) => {
             const isPassed = currentStageIndex > idx;
             const isCurrent = hackathon?.stage === st.id || (currentStageIndex === -1 && idx === 1);
@@ -94,19 +94,19 @@ export const HeroEventSection: React.FC<HeroProps> = ({
                 <div className="flex items-center gap-2">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-all ${
                     isCurrent
-                      ? "bg-[#BAFF00] text-black shadow-[0_0_10px_rgba(186,255,0,0.4)] ring-4 ring-[#BAFF00]/20"
+                      ? "bg-[#c8ff3d] text-[#06070c] shadow-[0_0_12px_rgba(200,255,61,0.4)] ring-4 ring-[#c8ff3d]/20"
                       : isPassed
-                      ? "bg-[#1A1A1A] text-[#BAFF00] border border-[#BAFF00]/40"
-                      : "bg-[#141414] text-[#555] border border-[#222]"
+                      ? "bg-[#121627] text-[#c8ff3d] border border-[#c8ff3d]/40"
+                      : "bg-[#0a0c14] text-[#8b93ad] border border-[#1e2436]"
                   }`}>
                     {isPassed ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
                   </div>
-                  <span className={`text-xs font-mono uppercase tracking-wider ${isCurrent ? "text-white font-bold" : isPassed ? "text-[#AAA]" : "text-[#555]"}`}>
+                  <span className={`text-xs font-mono uppercase tracking-wider ${isCurrent ? "text-white font-bold" : isPassed ? "text-[#e9edf8]" : "text-[#8b93ad]"}`}>
                     {st.label}
                   </span>
                 </div>
                 {idx < stages.length - 1 && (
-                  <div className={`flex-1 h-[2px] mx-3 ${isPassed ? "bg-[#BAFF00]/40" : "bg-[#222]"}`} />
+                  <div className={`flex-1 h-[2px] mx-3 ${isPassed ? "bg-[#c8ff3d]/40" : "bg-[#1e2436]"}`} />
                 )}
               </React.Fragment>
             );
@@ -118,8 +118,8 @@ export const HeroEventSection: React.FC<HeroProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* Left Side: Topic & Event Info */}
         <div className="lg:col-span-7 space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BAFF00]/10 border border-[#BAFF00]/30 text-[#BAFF00] text-xs font-mono font-semibold uppercase tracking-wider">
-            <span className="w-2 h-2 rounded-full bg-[#BAFF00] animate-ping" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c8ff3d]/10 border border-[#c8ff3d]/30 text-[#c8ff3d] text-xs font-mono font-semibold uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-[#c8ff3d] animate-ping" />
             ГЛАВНЫЙ СТАРТ ОСЕНИ // VIBE_MODE_ON
           </div>
 
@@ -127,35 +127,35 @@ export const HeroEventSection: React.FC<HeroProps> = ({
             {hackathon?.title || "Вайбатон №2"}
           </h1>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#111] border border-[#333]">
-            <div className="text-[11px] text-[#888] uppercase font-mono tracking-widest mb-1.5 flex items-center justify-between">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0e111c] border border-[#1e2436]">
+            <div className="text-[11px] text-[#8b93ad] uppercase font-mono tracking-widest mb-1.5 flex items-center justify-between">
               <span>ТЕМА ХАКАТОНА</span>
-              <span className="text-[#BAFF00]">STAGE: {hackathon?.stage || "ACTIVE"}</span>
+              <span className="text-[#c8ff3d] font-bold">STAGE: {hackathon?.stage || "ACTIVE"}</span>
             </div>
-            <div className="text-lg sm:text-2xl font-bold text-[#BAFF00] font-mono tracking-tight">
+            <div className="text-lg sm:text-2xl font-bold text-[#c8ff3d] font-mono tracking-tight">
               {hackathon?.theme || "Платформа для проведения Вайбатонов"}
             </div>
-            <p className="text-xs sm:text-sm text-[#AAA] mt-2 leading-relaxed font-mono">
+            <p className="text-xs sm:text-sm text-[#8b93ad] mt-2 leading-relaxed font-mono">
               {hackathon?.description || "Создайте живой сервис автоматизации хакатонов с AI Host, непрерывным Devlog и прозрачным судейством."}
             </p>
           </div>
 
           {/* Quick Metrics Badge Strip */}
           <div className="flex flex-wrap items-center gap-2.5 pt-1 font-mono text-xs">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#111] border border-[#333] text-[#DDD]">
-              <Users className="w-4 h-4 text-[#BAFF00]" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0e111c] border border-[#1e2436] text-[#e9edf8]">
+              <Users className="w-4 h-4 text-[#c8ff3d]" />
               <span><strong>{users.length}</strong> участников</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#111] border border-[#333] text-[#DDD]">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0e111c] border border-[#1e2436] text-[#e9edf8]">
               <Flame className="w-4 h-4 text-orange-400" />
               <span><strong>{teams.length}</strong> команд</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#111] border border-[#333] text-[#DDD]">
-              <Code className="w-4 h-4 text-cyan-400" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0e111c] border border-[#1e2436] text-[#e9edf8]">
+              <Code className="w-4 h-4 text-[#41f0ff]" />
               <span><strong>{mvpCount}</strong> MVP готово</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#111] border border-[#333] text-[#DDD]">
-              <Zap className="w-4 h-4 text-[#BAFF00]" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0e111c] border border-[#1e2436] text-[#e9edf8]">
+              <Zap className="w-4 h-4 text-[#c8ff3d]" />
               <span><strong>{posts.length}</strong> апдейтов</span>
             </div>
           </div>
@@ -163,8 +163,11 @@ export const HeroEventSection: React.FC<HeroProps> = ({
           {/* Call to Actions */}
           <div className="flex flex-wrap items-center gap-3 pt-3">
             <button
-              onClick={onOpenFastDevlog}
-              className="px-5 py-3 rounded-xl text-xs font-bold font-mono tracking-wider uppercase bg-[#BAFF00] text-black hover:bg-[#d4ff33] shadow-[0_0_15px_rgba(186,255,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
+              onClick={() => {
+                sound.playClick();
+                onOpenFastDevlog();
+              }}
+              className="px-5 py-3 rounded-xl text-xs font-bold font-mono tracking-wider uppercase bg-[#c8ff3d] text-[#06070c] hover:bg-[#d8ff5e] shadow-[0_0_15px_rgba(200,255,61,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
               <span>+ Опубликовать прогресс (30 сек)</span>
@@ -172,18 +175,24 @@ export const HeroEventSection: React.FC<HeroProps> = ({
 
             {hackathon?.stage === "SUBMISSION" || hackathon?.stage === "ACTIVE" ? (
               <button
-                onClick={onOpenSubmission}
-                className="px-5 py-3 rounded-xl text-xs font-bold font-mono tracking-wider uppercase bg-[#151515] hover:bg-[#202020] text-white border border-[#333] hover:border-[#BAFF00] transition-all flex items-center gap-2"
+                onClick={() => {
+                  sound.playClick();
+                  onOpenSubmission();
+                }}
+                className="px-5 py-3 rounded-xl text-xs font-bold font-mono tracking-wider uppercase bg-[#0e111c] hover:bg-[#121627] text-white border border-[#1e2436] hover:border-[#c8ff3d] transition-all flex items-center gap-2"
               >
-                <Send className="w-4 h-4 text-[#BAFF00]" />
+                <Send className="w-4 h-4 text-[#c8ff3d]" />
                 <span>Сдать финальный проект</span>
               </button>
             ) : null}
 
             {hackathon?.stage === "RESULTS" ? (
               <button
-                onClick={() => onNavigateToTab("judging")}
-                className="px-5 py-3 rounded-xl text-xs font-bold font-mono tracking-wider uppercase bg-gradient-to-r from-amber-400 to-[#BAFF00] text-black shadow-lg shadow-amber-500/25 flex items-center gap-2"
+                onClick={() => {
+                  sound.playClick();
+                  onNavigateToTab("judging");
+                }}
+                className="px-5 py-3 rounded-xl text-xs font-bold font-mono tracking-wider uppercase bg-gradient-to-r from-[#ffb020] to-[#c8ff3d] text-[#06070c] shadow-lg shadow-[#ffb020]/20 flex items-center gap-2"
               >
                 <Award className="w-4 h-4" />
                 <span>Смотреть победителей & Recap</span>
@@ -192,8 +201,11 @@ export const HeroEventSection: React.FC<HeroProps> = ({
 
             {!currentUser?.teamId && (
               <button
-                onClick={() => onNavigateToTab("matching")}
-                className="px-4 py-3 rounded-xl text-xs font-mono uppercase tracking-wider text-[#AAA] hover:text-[#BAFF00] hover:bg-[#151515] border border-[#222] hover:border-[#333] transition-all flex items-center gap-1.5"
+                onClick={() => {
+                  sound.playClick();
+                  onNavigateToTab("matching");
+                }}
+                className="px-4 py-3 rounded-xl text-xs font-mono uppercase tracking-wider text-[#8b93ad] hover:text-[#c8ff3d] hover:bg-[#0e111c] border border-[#1e2436] hover:border-[#2a3148] transition-all flex items-center gap-1.5"
               >
                 <span>Найти команду с AI</span>
                 <ArrowRight className="w-4 h-4" />
@@ -204,56 +216,56 @@ export const HeroEventSection: React.FC<HeroProps> = ({
 
         {/* Right Side: Huge High-Contrast Countdown in Artistic Flair Style */}
         <div className="lg:col-span-5">
-          <div className="bg-[#0e0e0e] border border-[#333] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-center">
-            <div className="text-xs font-mono text-[#BAFF00] uppercase tracking-widest mb-4 flex items-center justify-center gap-2">
+          <div className="bg-[#0e111c] border border-[#1e2436] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-center">
+            <div className="text-xs font-mono text-[#c8ff3d] uppercase tracking-widest mb-4 flex items-center justify-center gap-2 font-bold">
               <Clock className="w-4 h-4 animate-spin-slow" />
               <span>ДО ДЕДЛАЙНА ПРИЕМА РАБОТ</span>
             </div>
 
             {/* Big Countdown Digits */}
             <div className="grid grid-cols-4 gap-2 sm:gap-3 my-4">
-              <div className="bg-[#151515] border border-[#262626] rounded-2xl p-3 sm:p-4">
+              <div className="bg-[#0a0c14] border border-[#1e2436] rounded-2xl p-3 sm:p-4">
                 <div className="text-3xl sm:text-5xl font-black text-white font-mono tracking-tight">
                   {String(timeLeft.days).padStart(2, "0")}
                 </div>
-                <div className="text-[10px] sm:text-xs text-[#888] font-mono mt-1 uppercase">Дней</div>
+                <div className="text-[10px] sm:text-xs text-[#8b93ad] font-mono mt-1 uppercase">Дней</div>
               </div>
 
-              <div className="bg-[#151515] border border-[#262626] rounded-2xl p-3 sm:p-4">
+              <div className="bg-[#0a0c14] border border-[#1e2436] rounded-2xl p-3 sm:p-4">
                 <div className="text-3xl sm:text-5xl font-black text-white font-mono tracking-tight">
                   {String(timeLeft.hours).padStart(2, "0")}
                 </div>
-                <div className="text-[10px] sm:text-xs text-[#888] font-mono mt-1 uppercase">Часов</div>
+                <div className="text-[10px] sm:text-xs text-[#8b93ad] font-mono mt-1 uppercase">Часов</div>
               </div>
 
-              <div className="bg-[#151515] border border-[#262626] rounded-2xl p-3 sm:p-4">
+              <div className="bg-[#0a0c14] border border-[#1e2436] rounded-2xl p-3 sm:p-4">
                 <div className="text-3xl sm:text-5xl font-black text-white font-mono tracking-tight">
                   {String(timeLeft.minutes).padStart(2, "0")}
                 </div>
-                <div className="text-[10px] sm:text-xs text-[#888] font-mono mt-1 uppercase">Мин</div>
+                <div className="text-[10px] sm:text-xs text-[#8b93ad] font-mono mt-1 uppercase">Мин</div>
               </div>
 
-              <div className="bg-[#151515] border border-[#BAFF00]/50 rounded-2xl p-3 sm:p-4 shadow-[0_0_12px_rgba(186,255,0,0.2)]">
-                <div className="text-3xl sm:text-5xl font-black text-[#BAFF00] font-mono tracking-tight animate-pulse">
+              <div className="bg-[#0a0c14] border border-[#c8ff3d]/50 rounded-2xl p-3 sm:p-4 shadow-[0_0_12px_rgba(200,255,61,0.2)]">
+                <div className="text-3xl sm:text-5xl font-black text-[#c8ff3d] font-mono tracking-tight animate-pulse">
                   {String(timeLeft.seconds).padStart(2, "0")}
                 </div>
-                <div className="text-[10px] sm:text-xs text-[#BAFF00] font-mono mt-1 uppercase">Сек</div>
+                <div className="text-[10px] sm:text-xs text-[#c8ff3d] font-mono mt-1 uppercase">Сек</div>
               </div>
             </div>
 
             {/* Current User Status Banner */}
-            <div className="mt-5 pt-4 border-t border-[#222] text-xs text-[#AAA] font-mono flex items-center justify-between">
+            <div className="mt-5 pt-4 border-t border-[#1e2436] text-xs text-[#8b93ad] font-mono flex items-center justify-between">
               <div className="text-left">
-                <div className="text-[10px] text-[#666] uppercase">Ваш статус:</div>
+                <div className="text-[10px] text-[#8b93ad] uppercase">Ваш статус:</div>
                 <div className="font-semibold text-white flex items-center gap-1.5 mt-0.5">
-                  <span className="w-2 h-2 rounded-full bg-[#BAFF00]"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#c8ff3d]"></span>
                   {userTeam ? `Команда "${userTeam.name}"` : "Соло"}
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-[10px] text-[#666] uppercase">Проект:</div>
-                <div className="font-bold text-[#BAFF00]">
+                <div className="text-[10px] text-[#8b93ad] uppercase">Проект:</div>
+                <div className="font-bold text-[#c8ff3d]">
                   {userProject?.status || "IDEA"}
                 </div>
               </div>

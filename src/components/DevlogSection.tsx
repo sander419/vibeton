@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Bot
 } from "lucide-react";
+import { speakText, stopSpeech, sound } from "../utils/audio";
 import type { ProjectStatus } from "../types";
 
 interface DevlogSectionProps {
@@ -46,10 +47,12 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
 
   const handleAIPolish = async () => {
     if (!content.trim() || isPolishing) return;
+    sound.playClick();
     try {
       setIsPolishing(true);
       const res = await polishPostAI(content, status);
       if (res.polished) {
+        sound.playBroadcastChime();
         setPolishedSuggestion(res.polished);
         if (res.milestone) setMilestone(res.milestone);
         if (res.category) setCategory(res.category);
@@ -62,6 +65,7 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
   };
 
   const handleApplyPolished = () => {
+    sound.playClick();
     if (polishedSuggestion) {
       setContent(polishedSuggestion);
       setPolishedSuggestion(null);
@@ -71,6 +75,7 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim() || isSubmitting) return;
+    sound.playClick();
 
     try {
       setIsSubmitting(true);
@@ -83,6 +88,7 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
         milestone: milestone || "Обновление разработки",
         category
       });
+      sound.playSuccess();
 
       setContent("");
       setMediaUrl("");
@@ -98,149 +104,123 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
 
   const handleAddComment = async (postId: string) => {
     if (!commentInput.trim()) return;
+    sound.playClick();
     await addComment(postId, commentInput);
+    sound.playPulse();
     setCommentInput("");
+  };
+
+  const handleReaction = async (postId: string, emoji: string) => {
+    sound.playPop();
+    await reactToPost(postId, emoji);
   };
 
   const getStatusBadge = (st: ProjectStatus) => {
     switch (st) {
       case "MVP":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#BAFF00]/20 text-[#BAFF00] border border-[#BAFF00]/40">🚀 MVP ГОТОВ</span>;
+        return <span className="px-2.5 py-0.5 rounded text-[10.5px] font-mono font-bold bg-[#c8ff3d]/15 text-[#c8ff3d] border border-[#c8ff3d]/40">🚀 MVP</span>;
       case "DEMO":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">🎬 DEMO</span>;
+        return <span className="px-2.5 py-0.5 rounded text-[10.5px] font-mono font-bold bg-[#41f0ff]/15 text-[#41f0ff] border border-[#41f0ff]/40">🎬 DEMO</span>;
       case "SUBMITTED":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#BAFF00] text-black">🏁 СДАНО</span>;
+        return <span className="px-2.5 py-0.5 rounded text-[10.5px] font-mono font-bold bg-[#ff3da6]/20 text-[#ff3da6] border border-[#ff3da6]/40">🏁 СДАНО</span>;
       case "BUILDING":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#1A1A1A] text-[#BAFF00] border border-[#333]">⚡ В ПРОЦЕССЕ</span>;
+        return <span className="px-2.5 py-0.5 rounded text-[10.5px] font-mono font-bold bg-[#ffb020]/15 text-[#ffb020] border border-[#ffb020]/30">⚡ BUILDING</span>;
       default:
-        return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#141414] text-[#888] border border-[#262626]">💡 ИДЕЯ</span>;
+        return <span className="px-2.5 py-0.5 rounded text-[10.5px] font-mono font-bold bg-[#121627] text-[#8b93ad] border border-[#2a3148]">💡 IDEA</span>;
     }
   };
 
   return (
-    <div className="space-y-8 mb-8 font-mono">
+    <div className="space-y-8 mb-12 font-sans">
       {/* 30-Second Fast Devlog Composer */}
-      <div className="bg-[#0A0A0A] border border-[#333] rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#262626]">
+      <div className="bg-[#0e111c] border border-[#1e2436] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden font-mono">
+        <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#1e2436]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#BAFF00] text-black flex items-center justify-center font-bold shadow-[0_0_10px_rgba(186,255,0,0.3)]">
+            <div className="w-10 h-10 rounded-2xl bg-[#c8ff3d] text-[#06070c] flex items-center justify-center font-bold shadow-[0_0_15px_rgba(200,255,61,0.35)]">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Быстрый Devlog</h3>
-              <p className="text-xs text-[#888]">30 секунд от идеи до публикации в ленту хакатона</p>
+              <h3 className="font-display text-base font-bold text-white uppercase tracking-wider">БЫСТРЫЙ DEVLOG</h3>
+              <p className="text-xs text-[#8b93ad]">30 секунд от мысли до публикации в ленту соревнования</p>
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-xs text-[#888] font-mono">
+          <div className="hidden sm:flex items-center gap-2 text-xs text-[#8b93ad]">
             <span>Автор:</span>
-            <span className="text-[#BAFF00] font-bold">{currentUser?.name || "Участник"}</span>
+            <span className="text-[#c8ff3d] font-bold">{currentUser?.name || "Участник"}</span>
           </div>
         </div>
 
         <form onSubmit={handleSubmitPost} className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <textarea
-              rows={2}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Что вы сделали? (например: собрали сокет-сервер, подключили Gemini API, нарисовали таймер...)"
-              className="w-full bg-[#111] border border-[#333] rounded-2xl p-4 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#BAFF00] transition-all resize-none"
+              placeholder="Что только что сделали? (например: привязал WebSocket к таймеру и протестировал рендеринг)..."
+              rows={3}
+              className="w-full bg-[#0a0c14] border border-[#2a3148] focus:border-[#c8ff3d] rounded-2xl p-4 text-xs sm:text-sm text-white placeholder-[#5c647e] outline-none transition-colors"
             />
           </div>
 
-          {/* AI Polished Suggestion Banner */}
+          {/* AI Polish Live Preview */}
           {polishedSuggestion && (
-            <div className="p-3.5 bg-[#111] border border-[#BAFF00]/40 rounded-2xl flex items-start justify-between gap-3 animate-in fade-in">
-              <div className="flex items-start gap-2.5">
-                <Bot className="w-4 h-4 text-[#BAFF00] shrink-0 mt-0.5" />
-                <div className="text-xs text-[#DDD]">
-                  <div className="font-mono text-[10px] text-[#BAFF00] uppercase font-bold mb-1">AI-ПРЕДЛОЖЕНИЕ ДЛЯ DEVLOG:</div>
-                  <p className="leading-relaxed font-mono">{polishedSuggestion}</p>
-                </div>
+            <div className="p-4 rounded-2xl bg-[#0a0c14] border border-[#41f0ff]/40 space-y-2 animate-in fade-in">
+              <div className="flex items-center justify-between text-xs text-[#41f0ff]">
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Bot className="w-3.5 h-3.5" />
+                  <span>✨ AI-оформление готово:</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleApplyPolished}
+                  className="px-3 py-1 rounded-lg bg-[#41f0ff] hover:bg-[#68f3ff] text-[#06070c] font-bold text-[11px] uppercase transition-all shadow-[0_0_10px_rgba(65,240,255,0.3)]"
+                >
+                  Применить текст
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleApplyPolished}
-                className="px-2.5 py-1 rounded-lg bg-[#BAFF00] text-black text-xs font-bold font-mono uppercase shrink-0 hover:bg-[#d4ff33] transition-colors"
-              >
-                Применить
-              </button>
+              <p className="text-xs text-white leading-relaxed font-body">
+                {polishedSuggestion}
+              </p>
             </div>
           )}
 
-          {/* Controls Bar: Status, Media Buttons, AI Button, Submit */}
+          {/* Controls Bar: Status + AI Polish + Submit */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-            {/* Status & Media Toggles */}
             <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as ProjectStatus)}
-                className="bg-[#111] border border-[#333] text-xs text-[#AAA] rounded-xl px-3 py-2 focus:outline-none focus:border-[#BAFF00] font-mono font-medium"
-              >
-                <option value="IDEA">💡 Статус: Идея</option>
-                <option value="BUILDING">⚡ Статус: В разработке</option>
-                <option value="MVP">🚀 Статус: MVP готов</option>
-                <option value="DEMO">🎬 Статус: Интерактивное демо</option>
-                <option value="DONE">✓ Статус: Завершено</option>
-              </select>
-
-              <div className="flex items-center gap-1 bg-[#111] p-1 rounded-xl border border-[#262626]">
+              <span className="text-xs text-[#8b93ad]">Статус:</span>
+              {(["IDEA", "BUILDING", "MVP", "DEMO", "SUBMITTED"] as ProjectStatus[]).map((st) => (
                 <button
+                  key={st}
                   type="button"
-                  onClick={() => setMediaType(mediaType === 'image' ? undefined : 'image')}
-                  className={`p-1.5 rounded-lg text-xs transition-colors ${mediaType === 'image' ? 'bg-[#BAFF00] text-black font-bold' : 'text-[#888] hover:text-white'}`}
-                  title="Добавить картинку"
+                  onClick={() => setStatus(st)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    status === st
+                      ? "bg-[#c8ff3d] text-[#06070c] shadow-[0_0_10px_rgba(200,255,61,0.3)]"
+                      : "bg-[#0a0c14] text-[#8b93ad] border border-[#2a3148] hover:text-white"
+                  }`}
                 >
-                  <ImageIcon className="w-3.5 h-3.5" />
+                  {st}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setMediaType(mediaType === 'github' ? undefined : 'github')}
-                  className={`p-1.5 rounded-lg text-xs transition-colors ${mediaType === 'github' ? 'bg-[#BAFF00] text-black font-bold' : 'text-[#888] hover:text-white'}`}
-                  title="Ссылка на GitHub коммит"
-                >
-                  <Github className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMediaType(mediaType === 'demo' ? undefined : 'demo')}
-                  className={`p-1.5 rounded-lg text-xs transition-colors ${mediaType === 'demo' ? 'bg-[#BAFF00] text-black font-bold' : 'text-[#888] hover:text-white'}`}
-                  title="Ссылка на Live Demo"
-                >
-                  <PlaySquare className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {mediaType && (
-                <input
-                  type="url"
-                  placeholder={mediaType === 'image' ? "URL изображения..." : "Ссылка на демо/GitHub..."}
-                  value={mediaUrl}
-                  onChange={(e) => setMediaUrl(e.target.value)}
-                  className="bg-[#111] border border-[#333] text-xs text-white rounded-xl px-3 py-2 w-48 sm:w-64 focus:outline-none focus:border-[#BAFF00] font-mono"
-                />
-              )}
+              ))}
             </div>
 
-            {/* AI Polish and Submit */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleAIPolish}
                 disabled={!content.trim() || isPolishing}
-                className="px-3.5 py-2 rounded-xl bg-[#151515] hover:bg-[#222] border border-[#333] hover:border-[#BAFF00] text-[#BAFF00] text-xs font-bold font-mono uppercase flex items-center gap-1.5 transition-all disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-[#0a0c14] hover:bg-[#121627] text-[#41f0ff] border border-[#41f0ff]/30 hover:border-[#41f0ff] text-xs font-bold uppercase transition-all flex items-center gap-1.5 disabled:opacity-50"
               >
-                {isPolishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bot className="w-3.5 h-3.5 text-[#BAFF00]" />}
-                <span>AI-Оформить</span>
+                {isPolishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                <span>✨ AI-оформить</span>
               </button>
 
               <button
                 type="submit"
                 disabled={!content.trim() || isSubmitting}
-                className="px-5 py-2 rounded-xl bg-[#BAFF00] hover:bg-[#d4ff33] text-black text-xs font-bold font-mono uppercase flex items-center gap-1.5 shadow-[0_0_12px_rgba(186,255,0,0.3)] transition-all disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff66] text-[#06070c] text-xs font-extrabold uppercase shadow-[0_0_15px_rgba(200,255,61,0.35)] transition-all flex items-center gap-2 disabled:opacity-50"
               >
-                <Send className="w-3.5 h-3.5" />
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 <span>Опубликовать</span>
               </button>
             </div>
@@ -248,175 +228,130 @@ export const DevlogSection: React.FC<DevlogSectionProps> = () => {
         </form>
       </div>
 
-      {/* Devlog Feed List */}
-      <div className="space-y-5">
+      {/* Devlog Stream Feed */}
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-xl font-bold text-white font-mono uppercase tracking-wider">Лента Devlog</h3>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[#151515] text-[#BAFF00] border border-[#333] font-mono">
-              {posts.length} публикаций
-            </span>
-          </div>
-          <span className="text-xs text-[#888] font-mono">Обновляется в реальном времени</span>
+          <h2 className="font-display font-bold text-2xl text-white">DEVLOG ЛЕНТА ({posts.length})</h2>
+          <span className="text-xs font-mono text-[#8b93ad]">История создания проектов видна жюри</span>
         </div>
 
-        {posts.map((post) => {
-          const isCommentsOpen = activeCommentsPostId === post.id;
-          const postComments = comments.filter(c => c.postId === post.id);
+        <div className="space-y-4">
+          {posts.map((post) => {
+            const authorProject = projects.find((p) => p.id === post.projectId);
+            const authorTeam = teams.find((t) => t.id === post.teamId);
+            const isCommentsOpen = activeCommentsPostId === post.id;
+            const postComments = comments.filter((c) => c.postId === post.id);
 
-          return (
-            <div
-              key={post.id}
-              className="bg-[#0A0A0A] border border-[#262626] rounded-3xl p-5 sm:p-6 shadow-xl space-y-4 hover:border-[#444] transition-all"
-            >
-              {/* Post Header */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  {post.authorAvatar ? (
-                    <img
-                      src={post.authorAvatar}
-                      alt={post.authorName}
-                      className="w-10 h-10 rounded-xl object-cover border border-[#333]"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-xl bg-[#151515] border border-[#333] text-[#BAFF00] font-bold flex items-center justify-center text-sm font-mono">
-                      {post.authorName[0]}
+            return (
+              <div
+                key={post.id}
+                className="bg-[#0e111c] border border-[#1e2436] rounded-3xl p-6 shadow-xl space-y-4 font-sans hover:border-[#2a3148] transition-colors"
+              >
+                {/* Post Header */}
+                <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-[#1e2436]">
+                  <div className="flex items-center gap-3">
+                    {post.authorAvatar ? (
+                      <img src={post.authorAvatar} alt="" className="w-8 h-8 rounded-full object-cover border border-[#2a3148]" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-[#121627] text-[#c8ff3d] flex items-center justify-center font-bold text-xs font-mono">
+                        {post.authorName?.charAt(0) || "U"}
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>{post.authorName}</span>
+                        {authorTeam && (
+                          <span className="text-xs text-[#41f0ff] font-mono font-normal">
+                            → {authorTeam.name}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-[#5c647e] font-mono flex items-center gap-2">
+                        <span>{new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>•</span>
+                        <span>{post.milestone || "Devlog"}</span>
+                      </div>
                     </div>
-                  )}
+                  </div>
 
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-sm text-white font-mono">{post.authorName}</span>
-                      {post.teamName && (
-                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#151515] text-[#BAFF00] border border-[#333]">
-                          {post.teamName}
-                        </span>
-                      )}
-                      {getStatusBadge(post.status)}
-                    </div>
-                    <div className="text-xs text-[#888] font-mono mt-0.5 flex items-center gap-2">
-                      <span className="text-[#AAA]">{post.projectTitle}</span>
-                      <span>•</span>
-                      <span>{new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(post.status)}
                   </div>
                 </div>
 
-                {post.milestone && (
-                  <span className="hidden sm:inline-block text-[11px] font-mono px-2.5 py-1 rounded-xl bg-[#111] text-[#AAA] border border-[#333]">
-                    🎯 {post.milestone}
-                  </span>
+                {/* Post Body Text */}
+                <p className="text-sm sm:text-base text-[#e9edf8] leading-relaxed whitespace-pre-line font-body">
+                  {post.polishedContent || post.content}
+                </p>
+
+                {/* Post Footer Actions & Reactions */}
+                <div className="flex items-center justify-between pt-2 text-xs font-mono text-[#8b93ad]">
+                  <div className="flex items-center gap-2">
+                    {reactionsList.map((emoji) => {
+                      const count = (post.reactions && post.reactions[emoji]) || 0;
+                      return (
+                        <button
+                          key={emoji}
+                          onClick={() => handleReaction(post.id, emoji)}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border transition-all ${
+                            count > 0
+                              ? "bg-[#121627] text-white border-[#c8ff3d]/40 shadow-[0_0_8px_rgba(200,255,61,0.15)]"
+                              : "bg-[#0a0c14] text-[#5c647e] border-[#1e2436] hover:text-white"
+                          }`}
+                        >
+                          <span>{emoji}</span>
+                          {count > 0 && <span className="font-bold text-[#c8ff3d]">{count}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => setActiveCommentsPostId(isCommentsOpen ? null : post.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0a0c14] hover:bg-[#121627] text-[#8b93ad] hover:text-white border border-[#1e2436] transition-all"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>{postComments.length} коммент.</span>
+                  </button>
+                </div>
+
+                {/* Comments Drawer */}
+                {isCommentsOpen && (
+                  <div className="pt-4 border-t border-[#1e2436] space-y-3 font-mono">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {postComments.map((c) => (
+                        <div key={c.id} className="p-2.5 rounded-xl bg-[#0a0c14] border border-[#1e2436] text-xs">
+                          <div className="flex items-center justify-between text-[11px] text-[#5c647e] mb-1">
+                            <strong className="text-[#41f0ff]">{c.authorName}</strong>
+                            <span>{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                          <p className="text-white font-body">{c.text}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={commentInput}
+                        onChange={(e) => setCommentInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddComment(post.id)}
+                        placeholder="Написать комментарий..."
+                        className="flex-1 bg-[#0a0c14] border border-[#1e2436] focus:border-[#c8ff3d] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#5c647e] outline-none"
+                      />
+                      <button
+                        onClick={() => handleAddComment(post.id)}
+                        className="px-3.5 py-2 rounded-xl bg-[#c8ff3d] text-[#06070c] font-bold text-xs uppercase shadow-[0_0_10px_rgba(200,255,61,0.2)]"
+                      >
+                        Отправить
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
-
-              {/* Post Body */}
-              <div className="text-xs sm:text-sm text-[#DDD] font-mono leading-relaxed whitespace-pre-line">
-                {post.polishedContent || post.content}
-              </div>
-
-              {/* Media Attachments Preview */}
-              {post.mediaUrl && (
-                <div className="mt-3">
-                  {post.mediaType === 'image' ? (
-                    <div className="rounded-2xl overflow-hidden border border-[#333] max-h-80 bg-black">
-                      <img src={post.mediaUrl} alt="Devlog screenshot" className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <a
-                      href={post.mediaUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#111] hover:bg-[#181818] border border-[#333] text-xs text-[#BAFF00] font-mono font-semibold transition-colors"
-                    >
-                      {post.mediaType === 'github' ? <Github className="w-4 h-4" /> : <ExternalLink className="w-4 h-4" />}
-                      <span>{post.mediaType === 'github' ? "Смотреть GitHub коммит" : "Открыть Demo ссылку"}</span>
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {/* Social Bar: Reactions & Comment Trigger */}
-              <div className="pt-3 border-t border-[#222] flex flex-wrap items-center justify-between gap-3">
-                {/* Emoji Reactions */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {reactionsList.map((emoji) => {
-                    const count = post.reactions[emoji]?.length || 0;
-                    const hasReacted = currentUser && post.reactions[emoji]?.includes(currentUser.id);
-                    return (
-                      <button
-                        key={emoji}
-                        onClick={() => reactToPost(post.id, emoji)}
-                        className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-mono transition-all ${
-                          hasReacted
-                            ? "bg-[#BAFF00]/20 text-[#BAFF00] border border-[#BAFF00]/50 scale-105"
-                            : "bg-[#111] hover:bg-[#181818] text-[#AAA] border border-[#262626]"
-                        }`}
-                      >
-                        <span>{emoji}</span>
-                        {count > 0 && <span className="font-mono font-bold">{count}</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Comments Toggle Button */}
-                <button
-                  onClick={() => setActiveCommentsPostId(isCommentsOpen ? null : post.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#111] hover:bg-[#181818] border border-[#262626] text-xs text-[#AAA] font-mono transition-colors"
-                >
-                  <MessageSquare className="w-3.5 h-3.5 text-[#666]" />
-                  <span>{post.commentsCount || postComments.length} комментариев</span>
-                </button>
-              </div>
-
-              {/* Expandable Comments Drawer */}
-              {isCommentsOpen && (
-                <div className="pt-4 border-t border-[#222] space-y-3 animate-in fade-in">
-                  <div className="space-y-2 max-h-48 overflow-y-auto font-mono">
-                    {postComments.length === 0 ? (
-                      <div className="text-xs text-[#666] italic p-2">Будьте первым, кто оставит комментарий!</div>
-                    ) : (
-                      postComments.map((c) => (
-                        <div key={c.id} className="bg-[#111] p-2.5 rounded-xl border border-[#222] flex items-start gap-2.5">
-                          <img src={c.authorAvatar} alt={c.authorName} className="w-6 h-6 rounded-full object-cover border border-[#333]" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-xs text-white">{c.authorName}</span>
-                              <span className="text-[10px] text-[#666] font-mono">
-                                {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                            <div className="text-xs text-[#BBB] mt-0.5">{c.content}</div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Add Comment Input */}
-                  <div className="flex items-center gap-2 pt-1 font-mono">
-                    <input
-                      type="text"
-                      value={commentInput}
-                      onChange={(e) => setCommentInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleAddComment(post.id);
-                      }}
-                      placeholder="Напишите комментарий..."
-                      className="flex-1 bg-[#111] border border-[#333] rounded-xl px-3 py-1.5 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#BAFF00]"
-                    />
-                    <button
-                      onClick={() => handleAddComment(post.id)}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#BAFF00] hover:bg-[#d4ff33] text-black font-bold text-xs uppercase"
-                    >
-                      Отправить
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

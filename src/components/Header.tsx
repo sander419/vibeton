@@ -1,37 +1,44 @@
 import React, { useState } from "react";
 import { useHackathon } from "../context/HackathonContext";
-import { 
-  Radio, 
-  Volume2, 
-  VolumeX, 
-  User as UserIcon, 
-  Shield, 
-  Award, 
-  Sparkles, 
-  RotateCcw, 
-  Plus, 
-  ExternalLink,
+import {
+  Volume2,
+  VolumeX,
+  User as UserIcon,
+  Shield,
+  Award,
+  Sparkles,
+  RotateCcw,
+  Plus,
   Zap,
-  Clock,
-  Trophy
+  Trophy,
+  Swords,
+  Layers,
+  Maximize2,
+  ChevronDown,
+  Check,
+  MessageSquare
 } from "lucide-react";
-import type { Role } from "../types";
 
 interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   onOpenFastDevlog: () => void;
   onOpenRegister: () => void;
+  onOpenObserverMode?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
   onOpenFastDevlog,
-  onOpenRegister
+  onOpenRegister,
+  onOpenObserverMode
 }) => {
   const {
     hackathon,
+    eventsList,
+    activeEventId,
+    switchEvent,
     currentUser,
     users,
     switchActiveUser,
@@ -42,102 +49,209 @@ export const Header: React.FC<HeaderProps> = ({
   } = useHackathon();
 
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showEventMenu, setShowEventMenu] = useState(false);
 
   const navItems = [
-    { id: "live", label: "Главная (Live)", icon: Zap },
-    { id: "leaderboard", label: "Таблица лидеров", icon: Trophy },
-    { id: "devlog", label: "Devlog лента", icon: Sparkles },
-    { id: "projects", label: "Команды & Проекты", icon: UserIcon },
-    { id: "chat", label: "Чат эфира", icon: Radio },
-    { id: "judging", label: "Судейство & Итоги", icon: Award },
-    { id: "admin", label: "Организатор", icon: Shield }
+    { id: "live", label: "Главная", icon: Zap },
+    { id: "discovery", label: "События", icon: Layers },
+    { id: "duel", label: "1v1 Дуэль", icon: Swords },
+    { id: "leaderboard", label: "Таблица", icon: Trophy },
+    { id: "devlog", label: "Devlog", icon: Sparkles },
+    { id: "projects", label: "Проекты", icon: UserIcon },
+    { id: "chat", label: "Чат", icon: MessageSquare },
+    { id: "judging", label: "Судейство", icon: Award },
+    { id: "admin", label: "Орг-панель", icon: Shield }
   ];
 
   const getStageBadge = (stage?: string) => {
     switch (stage) {
       case "ACTIVE":
-        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 animate-pulse"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>LIVE ЭФИР</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-white bg-[#E63946] border border-[#1A1A1A]">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+            [LIVE]
+          </span>
+        );
       case "SUBMISSION":
-        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30"><span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>ПРИЕМ РАБОТ</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#1A1A1A] bg-[#EFECE6] border border-[#1A1A1A]">
+            [ПРИЁМ]
+          </span>
+        );
       case "JUDGING":
-        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-purple-500/10 text-purple-400 border border-purple-500/30"><span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>СУДЕЙСТВО</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-white bg-[#0F4C81] border border-[#1A1A1A]">
+            [СУДЕЙСТВО]
+          </span>
+        );
       case "RESULTS":
-        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">🏆 ИТОГИ</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#1A1A1A] bg-[#EFECE6] border border-[#1A1A1A]">
+            [ИТОГИ]
+          </span>
+        );
       default:
-        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-neutral-800 text-neutral-300 border border-neutral-700">{stage || "REGISTRATION"}</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#666] bg-[#EFECE6] border border-[#1A1A1A]">
+            [{stage || "READY"}]
+          </span>
+        );
     }
   };
 
+  const currentEvent = eventsList.find((e) => e.id === activeEventId) || hackathon;
+
   return (
-    <header className="sticky top-0 z-40 bg-[#0A0A0A]/95 backdrop-blur-md border-b border-[#333]">
-      {/* Top Bar for Fix-Ed Integration with Telemetry */}
-      <div className="bg-[#050505] border-b border-[#222] px-4 py-1 text-xs text-[#888] font-mono flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-[#F8F7F4] border-b-2 border-[#1A1A1A] font-mono">
+      {/* Top Telemetry Ticker Bar */}
+      <div className="bg-[#EFECE6] border-b border-[#1A1A1A] px-4 sm:px-8 py-1.5 text-xs text-[#1A1A1A] font-mono flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-[#BAFF00] font-bold tracking-wider flex items-center gap-1.5 text-[11px]">
-            <span className="w-2 h-2 rounded-full bg-[#BAFF00] animate-pulse"></span>
-            FIX-ED.ME // VIBATHON_NODE_04
+          <div className="label text-[#1A1A1A] font-bold">
+            [01] SYSTEM
+          </div>
+          <span className="text-[#999]">|</span>
+          <div className="font-bold tracking-wider text-xs text-[#1A1A1A]">
+            COMPETITION_OS // INDUSTRIAL_EDITION
+          </div>
+          <span className="text-[#999] hidden sm:inline">|</span>
+          <span className="text-[#666] text-[11px] hidden md:inline">
+            Event Engine • AI Host • 1v1 Arena • Observer Mode
           </span>
-          <span className="text-[#333]">|</span>
-          <span className="text-[#AAA] text-[11px] hidden sm:inline">Платформа автоматизации хакатонов</span>
-          <span className="hidden md:inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-[#111] text-[#BAFF00] border border-[#333]">
-            {sseConnected ? "● REALTIME SSE" : "○ SYNC"}
+          <span className="hidden lg:inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-[#FFFFFF] text-[#1A1A1A] border border-[#1A1A1A] font-bold">
+            {sseConnected ? "● REALTIME_SYNC" : "○ SYNC_OFFLINE"}
           </span>
         </div>
 
-        <div className="flex items-center gap-4 text-[11px]">
-          <div className="hidden sm:flex items-center gap-3 text-[#666]">
-            <span>LAG: <strong className="text-[#E0E0E0] font-mono">88.4ms</strong></span>
-            <span>SYNC: <strong className="text-[#BAFF00] font-mono">99.8%</strong></span>
-          </div>
-          <button 
-            onClick={resetDemoSeed} 
-            title="Перезагрузить демо-данные"
-            className="text-[10px] text-[#888] hover:text-[#BAFF00] flex items-center gap-1 px-2 py-0.5 rounded bg-[#111] border border-[#333] hover:border-[#BAFF00] transition-colors uppercase tracking-wider"
+        <div className="flex items-center gap-2 text-[11px]">
+          <button
+            onClick={resetDemoSeed}
+            title="Сбросить демо-данные"
+            className="text-[10px] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-[#F8F7F4] flex items-center gap-1 px-2 py-0.5 bg-[#FFFFFF] border border-[#1A1A1A] transition-colors font-bold uppercase tracking-wider"
           >
-            <RotateCcw className="w-2.5 h-2.5" />
-            <span>Сброс Demo</span>
+            <RotateCcw className="w-3 h-3" />
+            <span>Reset</span>
           </button>
-          
-          <a 
-            href="https://fix-ed.me" 
-            target="_blank" 
-            rel="noreferrer"
-            className="text-[11px] text-[#888] hover:text-[#BAFF00] flex items-center gap-1 transition-colors font-mono"
+
+          <button
+            onClick={toggleSound}
+            className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase transition-colors border border-[#1A1A1A] ${
+              soundEnabled
+                ? "bg-[#1A1A1A] text-[#F8F7F4]"
+                : "bg-[#FFFFFF] text-[#666] hover:text-[#1A1A1A]"
+            }`}
+            title="Синтез речи AI Host"
           >
-            <span>fix-ed.me</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
+            {soundEnabled ? <Volume2 className="w-3 h-3 text-[#E63946]" /> : <VolumeX className="w-3 h-3" />}
+            <span className="hidden sm:inline">{soundEnabled ? "AI_AUDIO: ON" : "AI_AUDIO: OFF"}</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Navigation Bar */}
+      {/* Main Navigation Row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Status */}
+        <div className="flex items-center justify-between h-16 gap-3">
+          {/* Left: Brand Logo & Event Format Switcher */}
           <div className="flex items-center gap-4">
-            <div 
-              onClick={() => setActiveTab("live")} 
-              className="cursor-pointer flex items-center gap-3 group"
+            <div
+              onClick={() => setActiveTab("live")}
+              className="cursor-pointer flex items-center gap-2 group select-none"
             >
-              <div className="w-9 h-9 rounded-full bg-[#BAFF00] flex items-center justify-center shadow-[0_0_15px_rgba(186,255,0,0.3)] group-hover:scale-105 transition-transform">
-                <div className="w-4 h-4 bg-black rotate-45 group-hover:rotate-90 transition-transform duration-300"></div>
+              <div className="font-display font-bold text-2xl tracking-tight text-[#1A1A1A] uppercase">
+                COMPETITION<span className="text-[#E63946]">_OS</span>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold tracking-wider text-white text-base font-mono uppercase group-hover:text-[#BAFF00] transition-colors">
-                    ВАЙБАТОН
+            </div>
+
+            {/* Event Switcher Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowEventMenu(!showEventMenu)}
+                className="flex items-center gap-2 px-3 py-1 bg-[#FFFFFF] hover:bg-[#EFECE6] border-1.5 border-[#1A1A1A] text-xs font-mono transition-colors text-left shadow-[2px_2px_0px_#1A1A1A]"
+              >
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-[#1A1A1A] uppercase truncate max-w-[130px] sm:max-w-[180px]">
+                      {currentEvent?.title || "Вайбатон №2"}
+                    </span>
+                    {getStageBadge(currentEvent?.stage)}
+                  </div>
+                  <span className="text-[10px] text-[#666] font-mono">
+                    {currentEvent?.templateType === "DUEL"
+                      ? "1v1 Cyber Duel"
+                      : currentEvent?.templateType === "SPEED_RUN"
+                      ? "Speed Run (24h)"
+                      : "Vibeathon Classic"}
                   </span>
-                  {getStageBadge(hackathon?.stage)}
                 </div>
-                <p className="text-[10px] text-[#888] font-mono tracking-widest uppercase -mt-0.5">
-                  LIVE HACKATHON STATION
-                </p>
-              </div>
+                <ChevronDown className="w-3.5 h-3.5 text-[#1A1A1A]" />
+              </button>
+
+              {/* Event Switcher Dropdown */}
+              {showEventMenu && (
+                <div className="absolute left-0 mt-2 w-80 bg-[#FFFFFF] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-2 z-50 font-mono">
+                  <div className="px-3 py-2 border-b border-[#1A1A1A] flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-[#666] uppercase font-bold tracking-wider">
+                      [ТУРНИРЫ]
+                    </span>
+                    <button
+                      onClick={() => {
+                        setActiveTab("discovery");
+                        setShowEventMenu(false);
+                      }}
+                      className="text-[10px] text-[#E63946] font-bold hover:underline uppercase"
+                    >
+                      Каталог →
+                    </button>
+                  </div>
+
+                  <div className="space-y-1 max-h-64 overflow-y-auto">
+                    {eventsList.map((ev) => {
+                      const isSel = ev.id === activeEventId;
+                      return (
+                        <button
+                          key={ev.id}
+                          onClick={async () => {
+                            await switchEvent(ev.id);
+                            setShowEventMenu(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs transition-colors border ${
+                            isSel
+                              ? "bg-[#1A1A1A] text-[#F8F7F4] border-[#1A1A1A]"
+                              : "text-[#1A1A1A] border-transparent hover:bg-[#EFECE6]"
+                          }`}
+                        >
+                          <div className="min-w-0 pr-2">
+                            <div className="font-bold uppercase truncate">{ev.title}</div>
+                            <div className="text-[10px] text-[#666] flex items-center gap-1.5 mt-0.5">
+                              <span className="uppercase text-[#E63946] font-bold">{ev.templateType}</span>
+                              <span>•</span>
+                              <span>{ev.stage}</span>
+                            </div>
+                          </div>
+                          {isSel && <Check className="w-4 h-4 text-[#E63946] flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="pt-2 border-t border-[#1A1A1A] mt-1">
+                    <button
+                      onClick={() => {
+                        setActiveTab("discovery");
+                        setShowEventMenu(false);
+                      }}
+                      className="w-full py-1.5 px-3 text-xs font-bold bg-[#1A1A1A] hover:bg-[#E63946] text-[#F8F7F4] hover:text-white flex items-center justify-center gap-1.5 transition-colors uppercase font-mono"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Каталог форматов</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1 bg-[#111] p-1 rounded-xl border border-[#333]">
+          {/* Desktop Nav Items */}
+          <nav className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -145,10 +259,10 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono tracking-wider transition-all uppercase ${
-                    isActive 
-                      ? "bg-[#BAFF00] text-black font-bold shadow-[0_0_10px_rgba(186,255,0,0.4)]" 
-                      : "text-[#AAA] hover:text-[#FFF] hover:bg-[#222]"
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold font-mono tracking-wider transition-colors uppercase whitespace-nowrap border-1.5 ${
+                    isActive
+                      ? "bg-[#1A1A1A] text-[#F8F7F4] border-[#1A1A1A] shadow-[2px_2px_0px_#E63946]"
+                      : "bg-transparent text-[#1A1A1A] border-transparent hover:border-[#1A1A1A] hover:bg-[#EFECE6]"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -158,131 +272,120 @@ export const Header: React.FC<HeaderProps> = ({
             })}
           </nav>
 
-          {/* Right Actions: Quick Devlog, Audio Toggle & User Selector */}
-          <div className="flex items-center gap-2.5">
-            {/* Quick Devlog CTA */}
+          {/* Right Actions: Devlog CTA, Observer, Profile */}
+          <div className="flex items-center gap-2">
+            {/* Observer Mode CTA */}
+            {onOpenObserverMode && (
+              <button
+                onClick={onOpenObserverMode}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FFFFFF] hover:bg-[#1A1A1A] hover:text-[#F8F7F4] text-[#1A1A1A] border-1.5 border-[#1A1A1A] text-xs font-mono font-bold uppercase transition-colors shadow-[2px_2px_0px_#1A1A1A]"
+                title="Режим прямого эфира / полноэкранный стрим"
+              >
+                <Maximize2 className="w-3.5 h-3.5 text-[#E63946]" />
+                <span className="hidden xl:inline">OBSERVER</span>
+              </button>
+            )}
+
+            {/* Quick Devlog Button */}
             <button
               onClick={onOpenFastDevlog}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold font-mono tracking-wider uppercase bg-[#BAFF00] text-black hover:bg-[#d4ff33] shadow-[0_0_12px_rgba(186,255,0,0.35)] hover:scale-105 transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#E63946] hover:bg-[#D02B38] text-white font-mono font-bold text-xs uppercase border-1.5 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] transition-transform active:translate-x-0.5 active:translate-y-0.5"
             >
               <Plus className="w-4 h-4" />
-              <span>+ Прогресс</span>
+              <span className="hidden sm:inline">+ DEVLOG</span>
             </button>
 
-            {/* Sound Toggle */}
-            <button
-              onClick={toggleSound}
-              title={soundEnabled ? "Звук включен" : "Звук выключен"}
-              className={`p-2 rounded-lg border text-xs transition-colors ${
-                soundEnabled 
-                  ? "bg-[#BAFF00]/10 border-[#BAFF00]/40 text-[#BAFF00] shadow-[0_0_8px_rgba(186,255,0,0.2)]" 
-                  : "bg-[#111] border-[#333] text-[#888] hover:text-white"
-              }`}
-            >
-              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            </button>
-
-            {/* User Switcher Dropdown */}
+            {/* User Profile / Quick Switcher */}
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg bg-[#111] hover:bg-[#1a1a1a] border border-[#333] hover:border-[#BAFF00]/50 text-xs text-white transition-all font-mono"
+                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1 bg-[#FFFFFF] hover:bg-[#EFECE6] border-1.5 border-[#1A1A1A] transition-colors text-xs font-mono shadow-[2px_2px_0px_#1A1A1A]"
               >
-                {currentUser?.avatar ? (
-                  <img 
-                    src={currentUser.avatar} 
-                    alt={currentUser.name} 
-                    className="w-6 h-6 rounded-full object-cover border border-[#BAFF00]"
+                {(currentUser?.avatar || currentUser?.avatarUrl) ? (
+                  <img
+                    src={currentUser?.avatar || currentUser?.avatarUrl}
+                    alt={currentUser?.name || "User"}
+                    className="w-6 h-6 object-cover border border-[#1A1A1A]"
                   />
                 ) : (
-                  <div className="w-6 h-6 rounded-full bg-[#BAFF00]/20 text-[#BAFF00] flex items-center justify-center font-bold text-xs">
-                    G
+                  <div className="w-6 h-6 bg-[#1A1A1A] text-[#F8F7F4] flex items-center justify-center font-bold text-xs">
+                    {currentUser?.name?.charAt(0) || "U"}
                   </div>
                 )}
-                <div className="text-left hidden md:block">
-                  <div className="font-semibold leading-none">{currentUser?.name || "Гость"}</div>
-                  <div className="text-[10px] text-[#888] font-mono mt-0.5 uppercase">
-                    {currentUser?.role || "Зритель"}
-                  </div>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-[#1A1A1A] font-bold truncate max-w-[90px]">
+                    {currentUser?.name || "Гость"}
+                  </span>
+                  <span className="text-[10px] text-[#666] font-mono -mt-0.5">
+                    {currentUser?.role || "Наблюдатель"}
+                  </span>
                 </div>
+                <ChevronDown className="w-3.5 h-3.5 text-[#1A1A1A]" />
               </button>
 
-              {/* Dropdown Menu */}
+              {/* User Dropdown with Quick Demo Roles */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-72 bg-[#111] border border-[#333] rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 font-mono">
-                  <div className="px-3 py-2 border-b border-[#222] mb-1">
-                    <p className="text-[10px] font-mono text-[#888] uppercase tracking-wider">Смена роли для тестирования</p>
-                  </div>
-
-                  <div className="space-y-1 max-h-64 overflow-y-auto">
-                    {users.map((u) => (
-                      <button
-                        key={u.id}
-                        onClick={() => {
-                          switchActiveUser(u.id);
-                          setShowUserMenu(false);
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs transition-colors ${
-                          currentUser?.id === u.id 
-                            ? "bg-[#BAFF00]/15 text-[#BAFF00] border border-[#BAFF00]/40" 
-                            : "text-[#AAA] hover:bg-[#1a1a1a] hover:text-white"
-                        }`}
-                      >
-                        <img src={u.avatar} alt={u.name} className="w-7 h-7 rounded-full object-cover border border-[#333]" />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-white truncate">{u.name}</div>
-                          <div className="text-[10px] text-[#888] font-mono flex items-center gap-1.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              u.role === 'organizer' ? 'bg-[#BAFF00]' :
-                              u.role === 'judge' ? 'bg-purple-400' : 'bg-cyan-400'
-                            }`} />
-                            {u.role.toUpperCase()} • {u.primaryRole}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="pt-2 border-t border-[#222] mt-1 flex flex-col gap-1">
+                <div className="absolute right-0 mt-2 w-72 bg-[#FFFFFF] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-2 z-50 font-mono">
+                  <div className="px-3 py-2 border-b border-[#1A1A1A] flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-[#666] uppercase font-bold tracking-wider">
+                      [ДЕМО-РОЛИ]
+                    </span>
                     <button
                       onClick={() => {
                         onOpenRegister();
                         setShowUserMenu(false);
                       }}
-                      className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold bg-[#1a1a1a] hover:bg-[#222] text-white border border-[#333] hover:border-[#BAFF00] flex items-center justify-center gap-1.5 transition-colors uppercase tracking-wider font-mono"
+                      className="text-[10px] text-[#E63946] font-bold hover:underline uppercase"
                     >
-                      <Plus className="w-3.5 h-3.5 text-[#BAFF00]" />
-                      <span>Новый участник</span>
+                      + Регистрация
                     </button>
+                  </div>
+
+                  <div className="space-y-1">
+                    {users.slice(0, 5).map((u) => {
+                      const isCurrent = u.id === currentUser?.id;
+                      return (
+                        <button
+                          key={u.id}
+                          onClick={() => {
+                            switchActiveUser(u.id);
+                            setShowUserMenu(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs transition-colors border ${
+                            isCurrent
+                              ? "bg-[#1A1A1A] text-[#F8F7F4] border-[#1A1A1A]"
+                              : "text-[#1A1A1A] border-transparent hover:bg-[#EFECE6]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {(u.avatar || u.avatarUrl) ? (
+                              <img
+                                src={u.avatar || u.avatarUrl}
+                                alt={u.name || "User"}
+                                className="w-6 h-6 object-cover border border-[#1A1A1A]"
+                              />
+                            ) : (
+                              <div className="w-6 h-6 bg-[#1A1A1A] text-[#F8F7F4] flex items-center justify-center font-bold text-[10px]">
+                                {u.name?.charAt(0) || "U"}
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <div className="font-bold truncate">{u.name || "Участник"}</div>
+                              <div className="text-[10px] text-[#666]">{u.role || "participant"}</div>
+                            </div>
+                          </div>
+                          {isCurrent && <Check className="w-4 h-4 text-[#E63946] flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
           </div>
         </div>
-
-        {/* Mobile Sub-Navigation */}
-        <div className="lg:hidden flex items-center gap-1 overflow-x-auto py-2 border-t border-[#222] no-scrollbar">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap shrink-0 transition-all font-mono uppercase ${
-                  isActive 
-                    ? "bg-[#BAFF00] text-black font-bold shadow-[0_0_8px_rgba(186,255,0,0.3)]" 
-                    : "text-[#AAA] hover:bg-[#1a1a1a]"
-                }`}
-              >
-                <Icon className="w-3 h-3" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
       </div>
     </header>
   );
 };
+

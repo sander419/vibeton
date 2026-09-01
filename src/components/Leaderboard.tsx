@@ -27,7 +27,7 @@ import {
   Users,
   ShieldCheck
 } from "lucide-react";
-import { speakText, stopSpeech } from "../utils/audio";
+import { speakText, stopSpeech, sound } from "../utils/audio";
 import type { Submission, Judgement, LeaderboardItem, Project } from "../types";
 
 interface LeaderboardProps {
@@ -64,10 +64,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const criteriaList = hackathon?.criteria && hackathon.criteria.length > 0
     ? hackathon.criteria
     : [
-        { id: "mvp", name: "MVP & Техническая реализация", maxScore: 10, description: "Полнота и стабильность сценария" },
-        { id: "ai_core", name: "AI Core & Host", maxScore: 10, description: "Качество интеграции AI-ведущего" },
-        { id: "ux_vibe", name: "Live UX & Атмосфера", maxScore: 10, description: "Дизайн, динамика и аудио" },
-        { id: "viability", name: "Жизнеспособность", maxScore: 10, description: "Перспектива развития и надежность" }
+        { id: "mvp", name: "MVP & Код", maxScore: 10, description: "Полнота и стабильность сценария" },
+        { id: "ai_core", name: "AI Core", maxScore: 10, description: "Качество интеграции AI" },
+        { id: "ux_vibe", name: "Live UX & Vibe", maxScore: 10, description: "Дизайн, динамика и атмосфера" },
+        { id: "viability", name: "Жизнеспособность", maxScore: 10, description: "Перспектива и архитектура" }
       ];
 
   // 1. Computed Scored Projects (Jury Rankings)
@@ -76,7 +76,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       const subJudgements = judgements.filter((j) => j.submissionId === sub.id);
       const reviewCount = subJudgements.length;
 
-      // Calculate average total score (0-40 or normalized to 10)
       let avgTotal = 0;
       const criterionAverages: Record<string, number> = {};
 
@@ -97,7 +96,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         avgTotal = Number((totalSum / reviewCount).toFixed(1));
       }
 
-      // Corresponding project & team
       const project = projects.find((p) => p.id === sub.projectId);
       const team = teams.find((t) => t.id === sub.teamId || t.projectId === sub.projectId);
       const teamPosts = posts.filter((p) => p.teamId === sub.teamId || p.projectId === sub.projectId);
@@ -114,7 +112,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         isEvaluated: reviewCount > 0
       };
     }).sort((a, b) => {
-      // Sort by average total score descending, then by review count, then by post count
       if (b.avgTotal !== a.avgTotal) return b.avgTotal - a.avgTotal;
       if (b.reviewCount !== a.reviewCount) return b.reviewCount - a.reviewCount;
       return b.postsCount - a.postsCount;
@@ -174,59 +171,57 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     }
   };
 
-  // Metrics
-  const totalSubmissions = submissions.length;
-  const evaluatedCount = scoredSubmissions.filter((s) => s.isEvaluated).length;
-  const topScore = scoredSubmissions[0]?.avgTotal || 0;
-  const totalTeams = teams.length;
+  const top1 = scoredSubmissions[0];
+  const top2 = scoredSubmissions[1];
+  const top3 = scoredSubmissions[2];
 
   return (
-    <div className="space-y-8 font-mono">
+    <div className="space-y-8 font-sans">
       {/* 1. HEADER HERO BANNER */}
-      <section className="relative overflow-hidden rounded-3xl bg-[#0C0C0C] border border-[#333] p-6 sm:p-8 shadow-2xl">
-        <div className="absolute -top-24 -left-24 w-80 h-80 bg-[#BAFF00]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 -right-24 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden rounded-3xl bg-[#0e111c] border border-[#1e2436] p-6 sm:p-8 shadow-2xl">
+        <div className="absolute -top-24 -left-24 w-80 h-80 bg-[#c8ff3d]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 -right-24 w-80 h-80 bg-[#41f0ff]/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex flex-wrap items-start justify-between gap-6 relative z-10">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BAFF00]/10 border border-[#BAFF00]/30 text-[#BAFF00] text-xs font-semibold uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-[#BAFF00] animate-pulse" />
-              LIVE STANDINGS & SCORING // REAL-TIME TELEMETRY
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c8ff3d]/10 border border-[#c8ff3d]/30 text-[#c8ff3d] text-xs font-mono font-semibold uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-[#c8ff3d] animate-pulse" />
+              LIVE STANDINGS & SCORING
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
+            <h1 className="font-display font-black text-2xl sm:text-4xl text-white uppercase tracking-tight">
               Турнирная таблица & Результаты
             </h1>
 
-            <p className="text-xs sm:text-sm text-[#AAA] leading-relaxed">
-              Отслеживайте оценки экспертного жюри, баллы за скорость разработки и статус номинаций в реальном времени.
+            <p className="text-xs sm:text-sm text-[#8b93ad] leading-relaxed font-body">
+              Два независимых рейтинга: <b>Competition Score</b> (оценки судей-людей) и <b>Social Score</b> (активность в Devlog).
             </p>
 
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-2 font-mono">
               <button
                 onClick={handleAnnounceLeaderboard}
                 className={`px-4 py-2 rounded-xl text-xs font-bold uppercase flex items-center gap-2 transition-all ${
                   isSpeaking
-                    ? "bg-[#BAFF00] text-black shadow-[0_0_15px_rgba(186,255,0,0.5)]"
-                    : "bg-[#181818] hover:bg-[#222] text-white border border-[#333] hover:border-[#BAFF00]"
+                    ? "bg-[#c8ff3d] text-[#06070c] shadow-[0_0_15px_rgba(200,255,61,0.5)]"
+                    : "bg-[#121627] hover:bg-[#1e2436] text-[#e9edf8] border border-[#2a3148] hover:border-[#c8ff3d]"
                 }`}
               >
-                {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-[#BAFF00]" />}
+                {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-[#c8ff3d]" />}
                 <span>{isSpeaking ? "Остановить сводку" : "Озвучить лидера (AI Host)"}</span>
               </button>
 
               {currentRole === "judge" || currentRole === "organizer" ? (
                 <button
                   onClick={onNavigateToJudging}
-                  className="px-4 py-2 rounded-xl bg-[#BAFF00] hover:bg-[#c9ff33] text-black text-xs font-bold uppercase flex items-center gap-1.5 shadow-[0_0_12px_rgba(186,255,0,0.3)] transition-all"
+                  className="px-4 py-2 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff66] text-[#06070c] text-xs font-bold uppercase flex items-center gap-1.5 shadow-[0_0_12px_rgba(200,255,61,0.3)] transition-all"
                 >
                   <Award className="w-4 h-4" />
-                  <span>Перейти к судейству</span>
+                  <span>Кабинет судейства</span>
                 </button>
               ) : (
                 <button
                   onClick={onOpenSubmission}
-                  className="px-4 py-2 rounded-xl bg-[#BAFF00] hover:bg-[#c9ff33] text-black text-xs font-bold uppercase flex items-center gap-1.5 shadow-[0_0_12px_rgba(186,255,0,0.3)] transition-all"
+                  className="px-4 py-2 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff66] text-[#06070c] text-xs font-bold uppercase flex items-center gap-1.5 shadow-[0_0_12px_rgba(200,255,61,0.3)] transition-all"
                 >
                   <Send className="w-4 h-4" />
                   <span>Сдать проект на оценку</span>
@@ -236,663 +231,385 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           </div>
 
           {/* Quick Metrics Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full lg:w-auto">
-            <div className="bg-[#141414] border border-[#222] rounded-2xl p-3.5 text-center min-w-[110px]">
-              <div className="text-xl sm:text-2xl font-black text-white">{totalSubmissions}</div>
-              <div className="text-[9px] text-[#777] uppercase mt-0.5">Сдано проектов</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full lg:w-auto font-mono">
+            <div className="bg-[#0a0c14] border border-[#1e2436] rounded-2xl p-3.5 text-center min-w-[110px]">
+              <div className="text-xl sm:text-2xl font-black text-white">{submissions.length}</div>
+              <div className="text-[10px] text-[#8b93ad] uppercase mt-0.5">Сдано работ</div>
             </div>
 
-            <div className="bg-[#141414] border border-[#222] rounded-2xl p-3.5 text-center min-w-[110px]">
-              <div className="text-xl sm:text-2xl font-black text-[#BAFF00]">{evaluatedCount}</div>
-              <div className="text-[9px] text-[#777] uppercase mt-0.5">Оценено жюри</div>
-            </div>
-
-            <div className="bg-[#141414] border border-[#222] rounded-2xl p-3.5 text-center min-w-[110px]">
-              <div className="text-xl sm:text-2xl font-black text-cyan-400">
-                {topScore > 0 ? `${topScore}` : "—"}
+            <div className="bg-[#0a0c14] border border-[#1e2436] rounded-2xl p-3.5 text-center min-w-[110px]">
+              <div className="text-xl sm:text-2xl font-black text-[#c8ff3d]">
+                {scoredSubmissions.filter((s) => s.isEvaluated).length}
               </div>
-              <div className="text-[9px] text-[#777] uppercase mt-0.5">Макс. балл</div>
+              <div className="text-[10px] text-[#8b93ad] uppercase mt-0.5">Оценено жюри</div>
             </div>
 
-            <div className="bg-[#141414] border border-[#222] rounded-2xl p-3.5 text-center min-w-[110px]">
-              <div className="text-xl sm:text-2xl font-black text-purple-400">{totalTeams}</div>
-              <div className="text-[9px] text-[#777] uppercase mt-0.5">Команд в игре</div>
+            <div className="bg-[#0a0c14] border border-[#1e2436] rounded-2xl p-3.5 text-center min-w-[110px]">
+              <div className="text-xl sm:text-2xl font-black text-[#41f0ff]">
+                {scoredSubmissions[0]?.avgTotal || 0}
+              </div>
+              <div className="text-[10px] text-[#8b93ad] uppercase mt-0.5">Топ балл</div>
+            </div>
+
+            <div className="bg-[#0a0c14] border border-[#1e2436] rounded-2xl p-3.5 text-center min-w-[110px]">
+              <div className="text-xl sm:text-2xl font-black text-[#ff3da6]">{teams.length}</div>
+              <div className="text-[10px] text-[#8b93ad] uppercase mt-0.5">Команд</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. TOP PODIUM (Top 3 Contenders) */}
-      {scoredSubmissions.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-[#BAFF00]" />
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                Подиум лидеров (Судейский зачет)
-              </h3>
+      {/* 2. TOP-3 PODIUM SHOWCASE (For Jury Rankings) */}
+      {activeTab === "jury" && scoredSubmissions.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end pt-4">
+          {/* SILVER #2 */}
+          {top2 && (
+            <div className="order-2 md:order-1 bg-[#0e111c] border border-[#41f0ff]/40 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between h-[300px]">
+              <div className="absolute top-4 right-4 font-display font-black text-4xl text-[#41f0ff]/20 select-none">
+                02
+              </div>
+              <div>
+                <div className="text-3xl mb-2">🥈</div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase text-[#41f0ff] bg-[#41f0ff]/10 border border-[#41f0ff]/30">
+                  2 МЕСТО
+                </span>
+                <h3 className="font-display font-bold text-xl text-white mt-2 truncate">
+                  {top2.submission.title}
+                </h3>
+                <p className="text-xs text-[#8b93ad] font-mono">
+                  {top2.submission.teamName || top2.submission.authorName}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#1e2436] flex items-center justify-between font-mono">
+                <span className="text-xs text-[#8b93ad]">Средний балл:</span>
+                <span className="font-display font-black text-2xl text-[#41f0ff]">
+                  {top2.avgTotal} <span className="text-xs text-[#5c647e]">/ 40</span>
+                </span>
+              </div>
             </div>
-            <span className="text-[10px] text-[#888] uppercase">TOP 3 CONTENDERS</span>
-          </div>
+          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* #1 GOLD */}
-            {scoredSubmissions[0] && (
-              <div className="relative overflow-hidden rounded-3xl bg-[#0F0F0F] border-2 border-[#BAFF00] p-5 shadow-[0_0_30px_rgba(186,255,0,0.2)] flex flex-col justify-between order-1 md:order-2">
-                <div className="absolute -right-8 -top-8 w-28 h-28 bg-[#BAFF00]/10 rounded-full blur-2xl pointer-events-none" />
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-9 h-9 rounded-2xl bg-[#BAFF00] text-black font-black text-sm flex items-center justify-center shadow-[0_0_12px_rgba(186,255,0,0.5)]">
-                      1 🏆
-                    </span>
-                    <div>
-                      <span className="text-[10px] text-[#BAFF00] font-bold uppercase tracking-wider block">
-                        ГРАН-ПРИ ЛИДЕР
-                      </span>
-                      <h4 className="text-sm font-black text-white truncate max-w-[180px]">
-                        {scoredSubmissions[0].submission.title}
-                      </h4>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl font-black text-[#BAFF00] font-mono">
-                      {scoredSubmissions[0].avgTotal > 0 ? `${scoredSubmissions[0].avgTotal}` : "NEW"}
-                    </div>
-                    <span className="text-[9px] text-[#888]">из 40 баллов</span>
-                  </div>
-                </div>
-
-                <div className="my-3 p-3 rounded-2xl bg-[#141414] border border-[#222] space-y-1.5 text-xs text-[#AAA]">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-white font-bold">{scoredSubmissions[0].submission.teamName || scoredSubmissions[0].submission.authorName}</span>
-                    <span className="text-[#BAFF00] text-[10px]">
-                      {scoredSubmissions[0].reviewCount} {scoredSubmissions[0].reviewCount === 1 ? "оценка" : "оценки"}
-                    </span>
-                  </div>
-                  <p className="line-clamp-2 text-[11px] text-[#888]">
-                    {scoredSubmissions[0].submission.description}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between gap-2 pt-1">
-                  <div className="flex items-center gap-1">
-                    {scoredSubmissions[0].submission.demoUrl && (
-                      <a
-                        href={scoredSubmissions[0].submission.demoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 rounded-lg bg-[#181818] hover:bg-[#222] text-[#BAFF00] border border-[#333] text-xs transition-colors"
-                        title="Демо"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                    {scoredSubmissions[0].submission.repoUrl && (
-                      <a
-                        href={scoredSubmissions[0].submission.repoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 rounded-lg bg-[#181818] hover:bg-[#222] text-white border border-[#333] text-xs transition-colors"
-                        title="Github"
-                      >
-                        <Github className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => setExpandedRowId(expandedRowId === scoredSubmissions[0].submission.id ? null : scoredSubmissions[0].submission.id)}
-                    className="text-[11px] text-[#BAFF00] hover:underline flex items-center gap-1 font-bold"
-                  >
-                    <span>Подробности</span>
-                    {expandedRowId === scoredSubmissions[0].submission.id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
+          {/* GOLD #1 (Elevated) */}
+          {top1 && (
+            <div className="order-1 md:order-2 bg-[#0e111c] border-2 border-[#c8ff3d] rounded-3xl p-8 shadow-[0_0_30px_rgba(200,255,61,0.25)] relative overflow-hidden flex flex-col justify-between h-[340px]">
+              <div className="absolute top-4 right-4 font-display font-black text-5xl text-[#c8ff3d]/20 select-none">
+                01
               </div>
-            )}
-
-            {/* #2 SILVER */}
-            {scoredSubmissions[1] && (
-              <div className="relative overflow-hidden rounded-3xl bg-[#0F0F0F] border border-cyan-500/50 p-5 shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col justify-between order-2 md:order-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-2xl bg-cyan-400 text-black font-black text-xs flex items-center justify-center">
-                      2 🥈
-                    </span>
-                    <div>
-                      <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider block">
-                        2-Е МЕСТО
-                      </span>
-                      <h4 className="text-sm font-black text-white truncate max-w-[160px]">
-                        {scoredSubmissions[1].submission.title}
-                      </h4>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-black text-cyan-400 font-mono">
-                      {scoredSubmissions[1].avgTotal > 0 ? `${scoredSubmissions[1].avgTotal}` : "—"}
-                    </div>
-                    <span className="text-[9px] text-[#888]">баллов</span>
-                  </div>
-                </div>
-
-                <div className="my-3 p-3 rounded-2xl bg-[#141414] border border-[#222] space-y-1.5 text-xs text-[#AAA]">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-white font-bold">{scoredSubmissions[1].submission.teamName || scoredSubmissions[1].submission.authorName}</span>
-                    <span className="text-cyan-400 text-[10px]">{scoredSubmissions[1].reviewCount} оценок</span>
-                  </div>
-                  <p className="line-clamp-2 text-[11px] text-[#888]">
-                    {scoredSubmissions[1].submission.description}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between gap-2 pt-1">
-                  <div className="flex items-center gap-1">
-                    {scoredSubmissions[1].submission.demoUrl && (
-                      <a
-                        href={scoredSubmissions[1].submission.demoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 rounded-lg bg-[#181818] hover:bg-[#222] text-cyan-400 border border-[#333] text-xs"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setExpandedRowId(expandedRowId === scoredSubmissions[1].submission.id ? null : scoredSubmissions[1].submission.id)}
-                    className="text-[11px] text-cyan-400 hover:underline flex items-center gap-1 font-bold"
-                  >
-                    <span>Подробности</span>
-                    {expandedRowId === scoredSubmissions[1].submission.id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
+              <div>
+                <div className="text-4xl mb-2">🏆</div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-extrabold uppercase text-[#06070c] bg-[#c8ff3d] shadow-[0_0_15px_rgba(200,255,61,0.4)]">
+                  ПОБЕДИТЕЛЬ ВАЙБАТОНА
+                </span>
+                <h3 className="font-display font-black text-2xl text-white mt-3 truncate">
+                  {top1.submission.title}
+                </h3>
+                <p className="text-sm text-[#c8ff3d] font-mono font-bold mt-0.5">
+                  {top1.submission.teamName || top1.submission.authorName}
+                </p>
               </div>
-            )}
 
-            {/* #3 BRONZE */}
-            {scoredSubmissions[2] ? (
-              <div className="relative overflow-hidden rounded-3xl bg-[#0F0F0F] border border-orange-500/40 p-5 shadow-[0_0_20px_rgba(249,115,22,0.15)] flex flex-col justify-between order-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-2xl bg-orange-400 text-black font-black text-xs flex items-center justify-center">
-                      3 🥉
-                    </span>
-                    <div>
-                      <span className="text-[10px] text-orange-400 font-bold uppercase tracking-wider block">
-                        3-Е МЕСТО
-                      </span>
-                      <h4 className="text-sm font-black text-white truncate max-w-[160px]">
-                        {scoredSubmissions[2].submission.title}
-                      </h4>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-black text-orange-400 font-mono">
-                      {scoredSubmissions[2].avgTotal > 0 ? `${scoredSubmissions[2].avgTotal}` : "—"}
-                    </div>
-                    <span className="text-[9px] text-[#888]">баллов</span>
-                  </div>
-                </div>
-
-                <div className="my-3 p-3 rounded-2xl bg-[#141414] border border-[#222] space-y-1.5 text-xs text-[#AAA]">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-white font-bold">{scoredSubmissions[2].submission.teamName || scoredSubmissions[2].submission.authorName}</span>
-                    <span className="text-orange-400 text-[10px]">{scoredSubmissions[2].reviewCount} оценок</span>
-                  </div>
-                  <p className="line-clamp-2 text-[11px] text-[#888]">
-                    {scoredSubmissions[2].submission.description}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between gap-2 pt-1">
-                  <div className="flex items-center gap-1">
-                    {scoredSubmissions[2].submission.demoUrl && (
-                      <a
-                        href={scoredSubmissions[2].submission.demoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 rounded-lg bg-[#181818] hover:bg-[#222] text-orange-400 border border-[#333] text-xs"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setExpandedRowId(expandedRowId === scoredSubmissions[2].submission.id ? null : scoredSubmissions[2].submission.id)}
-                    className="text-[11px] text-orange-400 hover:underline flex items-center gap-1 font-bold"
-                  >
-                    <span>Подробности</span>
-                    {expandedRowId === scoredSubmissions[2].submission.id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
+              <div className="pt-4 border-t border-[#1e2436] flex items-center justify-between font-mono">
+                <span className="text-xs text-[#8b93ad]">Итоговый балл жюри:</span>
+                <span className="font-display font-black text-3xl text-[#c8ff3d]">
+                  {top1.avgTotal} <span className="text-sm text-[#5c647e]">/ 40</span>
+                </span>
               </div>
-            ) : (
-              <div className="rounded-3xl bg-[#0C0C0C] border border-[#222] border-dashed p-6 flex flex-col items-center justify-center text-center text-[#666] text-xs order-3">
-                <Trophy className="w-8 h-8 text-[#333] mb-2" />
-                <span>Место на подиуме свободно</span>
-                <span className="text-[10px] text-[#555] mt-1">Сдайте проект для входа в топ-3</span>
+            </div>
+          )}
+
+          {/* BRONZE #3 */}
+          {top3 && (
+            <div className="order-3 md:order-3 bg-[#0e111c] border border-[#ff3da6]/40 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between h-[280px]">
+              <div className="absolute top-4 right-4 font-display font-black text-4xl text-[#ff3da6]/20 select-none">
+                03
               </div>
-            )}
-          </div>
-        </section>
+              <div>
+                <div className="text-3xl mb-2">🥉</div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase text-[#ff3da6] bg-[#ff3da6]/10 border border-[#ff3da6]/30">
+                  3 МЕСТО
+                </span>
+                <h3 className="font-display font-bold text-xl text-white mt-2 truncate">
+                  {top3.submission.title}
+                </h3>
+                <p className="text-xs text-[#8b93ad] font-mono">
+                  {top3.submission.teamName || top3.submission.authorName}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#1e2436] flex items-center justify-between font-mono">
+                <span className="text-xs text-[#8b93ad]">Средний балл:</span>
+                <span className="font-display font-black text-2xl text-[#ff3da6]">
+                  {top3.avgTotal} <span className="text-xs text-[#5c647e]">/ 40</span>
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
-      {/* 3. MAIN INTERACTIVE LEADERBOARD TABLE & FILTERS */}
-      <section className="bg-[#0C0C0C] border border-[#333] rounded-3xl p-5 sm:p-7 shadow-xl space-y-6">
-        {/* Navigation Sub-Tabs & Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#222]">
-          <div className="flex items-center gap-1 bg-[#141414] p-1.5 rounded-2xl border border-[#262626]">
-            <button
-              onClick={() => setActiveTab("jury")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${
-                activeTab === "jury"
-                  ? "bg-[#BAFF00] text-black shadow-[0_0_10px_rgba(186,255,0,0.3)]"
-                  : "text-[#888] hover:text-white"
-              }`}
-            >
-              <Award className="w-4 h-4" />
-              <span>Судейский зачет ({scoredSubmissions.length})</span>
-            </button>
+      {/* 3. TABS NAVIGATION & SEARCH BAR */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 font-mono">
+        <div className="flex items-center gap-1.5 bg-[#0a0c14] p-1.5 rounded-2xl border border-[#1e2436] w-full sm:w-auto">
+          <button
+            onClick={() => {
+              sound.playClick();
+              setActiveTab("jury");
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${
+              activeTab === "jury"
+                ? "bg-[#c8ff3d] text-[#06070c] shadow-[0_0_12px_rgba(200,255,61,0.3)]"
+                : "text-[#8b93ad] hover:text-white"
+            }`}
+          >
+            <Award className="w-3.5 h-3.5" />
+            <span>Судейский зачет ({scoredSubmissions.length})</span>
+          </button>
 
-            <button
-              onClick={() => setActiveTab("activity")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${
-                activeTab === "activity"
-                  ? "bg-[#BAFF00] text-black shadow-[0_0_10px_rgba(186,255,0,0.3)]"
-                  : "text-[#888] hover:text-white"
-              }`}
-            >
-              <Flame className="w-4 h-4" />
-              <span>Пульс активности ({leaderboard.length})</span>
-            </button>
+          <button
+            onClick={() => {
+              sound.playClick();
+              setActiveTab("activity");
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${
+              activeTab === "activity"
+                ? "bg-[#c8ff3d] text-[#06070c] shadow-[0_0_12px_rgba(200,255,61,0.3)]"
+                : "text-[#8b93ad] hover:text-white"
+            }`}
+          >
+            <Flame className="w-3.5 h-3.5" />
+            <span>Пульс активности ({leaderboard.length})</span>
+          </button>
 
-            <button
-              onClick={() => setActiveTab("awards")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${
-                activeTab === "awards"
-                  ? "bg-[#BAFF00] text-black shadow-[0_0_10px_rgba(186,255,0,0.3)]"
-                  : "text-[#888] hover:text-white"
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Спецноминации</span>
-            </button>
-          </div>
-
-          {/* Search & Status Filter */}
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-64">
-              <Search className="w-3.5 h-3.5 text-[#666] absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Поиск по проекту, команде..."
-                className="w-full bg-[#141414] border border-[#333] rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-[#666] focus:outline-none focus:border-[#BAFF00]"
-              />
-            </div>
-
-            {activeTab === "jury" && (
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-[#141414] border border-[#333] rounded-xl px-3 py-2 text-xs text-[#CCC] focus:outline-none focus:border-[#BAFF00]"
-              >
-                <option value="ALL">Все статусы</option>
-                <option value="EVALUATED">Оцененные жюри</option>
-                <option value="PENDING">Ожидают оценки</option>
-              </select>
-            )}
-
-            {activeTab === "activity" && (
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-[#141414] border border-[#333] rounded-xl px-3 py-2 text-xs text-[#CCC] focus:outline-none focus:border-[#BAFF00]"
-              >
-                <option value="ALL">Все участники</option>
-                <option value="MVP">Только с MVP</option>
-                <option value="SUBMITTED">Сдавшие работу</option>
-              </select>
-            )}
-          </div>
+          <button
+            onClick={() => {
+              sound.playClick();
+              setActiveTab("awards");
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${
+              activeTab === "awards"
+                ? "bg-[#c8ff3d] text-[#06070c] shadow-[0_0_12px_rgba(200,255,61,0.3)]"
+                : "text-[#8b93ad] hover:text-white"
+            }`}
+          >
+            <Star className="w-3.5 h-3.5" />
+            <span>Номинации</span>
+          </button>
         </div>
 
-        {/* TAB 1: JURY SCORES STANDINGS */}
-        {activeTab === "jury" && (
-          <div className="space-y-4">
-            {filteredScored.length === 0 ? (
-              <div className="p-12 text-center bg-[#111] rounded-2xl border border-[#222] space-y-3">
-                <Award className="w-10 h-10 text-[#444] mx-auto" />
-                <h4 className="text-sm font-bold text-white uppercase">Проекты не найдены</h4>
-                <p className="text-xs text-[#777] max-w-sm mx-auto">
-                  {searchQuery ? "Попробуйте изменить запрос поиска" : "Пока никто не сдал проект. Будьте первыми!"}
-                </p>
-                {onOpenSubmission && (
-                  <button
-                    onClick={onOpenSubmission}
-                    className="px-4 py-2 rounded-xl bg-[#BAFF00] text-black font-bold text-xs uppercase"
-                  >
-                    Сдать проект
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredScored.map((item, index) => {
+        {/* Search input */}
+        <div className="relative w-full sm:w-72">
+          <Search className="w-4 h-4 text-[#5c647e] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Поиск по названию или стеку..."
+            className="w-full bg-[#0a0c14] border border-[#1e2436] focus:border-[#c8ff3d] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-[#5c647e] outline-none"
+          />
+        </div>
+      </div>
+
+      {/* 4. MAIN TABLE CONTENT */}
+      {activeTab === "jury" ? (
+        <div className="bg-[#0e111c] border border-[#1e2436] rounded-3xl overflow-hidden shadow-2xl font-mono">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#0a0c14] border-b border-[#1e2436] text-[#8b93ad] uppercase text-[10.5px] tracking-wider">
+                  <th className="py-4 px-5"># Ранг</th>
+                  <th className="py-4 px-5">Проект / Команда</th>
+                  <th className="py-4 px-5">Стек</th>
+                  <th className="py-4 px-5 text-center">Оценок жюри</th>
+                  <th className="py-4 px-5 text-right">Средний балл</th>
+                  <th className="py-4 px-5 text-center">Действия</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1e2436]">
+                {filteredScored.map((item, idx) => {
                   const isExpanded = expandedRowId === item.submission.id;
                   return (
-                    <div
-                      key={item.submission.id}
-                      className={`rounded-2xl border transition-all ${
-                        index === 0
-                          ? "bg-[#141414] border-[#BAFF00]/40 shadow-[0_0_15px_rgba(186,255,0,0.1)]"
-                          : "bg-[#101010] hover:bg-[#141414] border-[#222] hover:border-[#333]"
-                      }`}
-                    >
-                      {/* Row Main Bar */}
-                      <div
-                        onClick={() => setExpandedRowId(isExpanded ? null : item.submission.id)}
-                        className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 cursor-pointer"
-                      >
-                        {/* Left: Rank & Title */}
-                        <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                          <span
-                            className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
-                              index === 0
-                                ? "bg-[#BAFF00] text-black"
-                                : index === 1
-                                ? "bg-cyan-400 text-black"
-                                : index === 2
-                                ? "bg-orange-400 text-black"
-                                : "bg-[#1c1c1c] text-[#777] border border-[#2a2a2a]"
-                            }`}
-                          >
-                            #{index + 1}
+                    <React.Fragment key={item.submission.id}>
+                      <tr className="hover:bg-[#121627] transition-colors">
+                        <td className="py-4 px-5 font-bold">
+                          <span className={`font-display text-base ${idx === 0 ? "text-[#c8ff3d]" : idx === 1 ? "text-[#41f0ff]" : idx === 2 ? "text-[#ff3da6]" : "text-[#8b93ad]"}`}>
+                            {idx < 9 ? `0${idx + 1}` : idx + 1}
                           </span>
+                        </td>
 
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-bold text-white truncate group-hover:text-[#BAFF00]">
-                                {item.submission.title}
-                              </h4>
-                              {index === 0 && (
-                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#BAFF00]/20 text-[#BAFF00] border border-[#BAFF00]/40">
-                                  👑 LEADER
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 text-[11px] text-[#777] mt-0.5">
-                              <span className="text-[#AAA]">{item.submission.teamName || item.submission.authorName}</span>
-                              <span>•</span>
-                              <span>{item.submission.techStack?.slice(0, 3).join(", ") || "Stack"}</span>
-                            </div>
+                        <td className="py-4 px-5">
+                          <div className="font-bold text-sm text-white">{item.submission.title}</div>
+                          <div className="text-[11px] text-[#8b93ad] mt-0.5">
+                            {item.submission.teamName || item.submission.authorName}
                           </div>
-                        </div>
+                        </td>
 
-                        {/* Center: Mini Criteria Score Bars */}
-                        <div className="hidden lg:grid grid-cols-4 gap-3 text-center">
-                          {criteriaList.map((crit) => {
-                            const score = item.criterionAverages[crit.id] || 0;
-                            return (
-                              <div key={crit.id} className="min-w-[65px] bg-[#161616] p-1.5 rounded-lg border border-[#262626]">
-                                <div className="text-[9px] text-[#777] uppercase truncate" title={crit.name}>
-                                  {crit.id.toUpperCase()}
-                                </div>
-                                <div className="text-xs font-bold text-white font-mono">
-                                  {score > 0 ? score : "—"}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Right: Total Score & Expand Trigger */}
-                        <div className="flex items-center gap-4 shrink-0">
-                          <div className="text-right">
-                            <div className="text-base sm:text-xl font-black text-[#BAFF00] font-mono">
-                              {item.avgTotal > 0 ? `${item.avgTotal}` : "—"}
-                            </div>
-                            <div className="text-[9px] text-[#888]">
-                              {item.reviewCount > 0 ? `${item.reviewCount} оценок жюри` : "На проверке"}
-                            </div>
+                        <td className="py-4 px-5">
+                          <div className="flex flex-wrap gap-1">
+                            {(item.submission.techStack || []).slice(0, 3).map((t) => (
+                              <span key={t} className="px-2 py-0.5 rounded bg-[#0a0c14] border border-[#2a3148] text-[10px] text-[#8b93ad]">
+                                {t}
+                              </span>
+                            ))}
                           </div>
+                        </td>
 
-                          <div className="p-1 rounded-lg bg-[#181818] text-[#888] group-hover:text-white">
-                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                          </div>
-                        </div>
-                      </div>
+                        <td className="py-4 px-5 text-center">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                            item.reviewCount > 0
+                              ? "bg-[#41f0ff]/10 text-[#41f0ff] border border-[#41f0ff]/30"
+                              : "bg-[#0a0c14] text-[#5c647e]"
+                          }`}>
+                            {item.reviewCount} оценок
+                          </span>
+                        </td>
 
-                      {/* Expanded Project & Scoring Details */}
-                      {isExpanded && (
-                        <div className="px-5 pb-5 pt-2 border-t border-[#222] bg-[#0E0E0E]/80 space-y-4 animate-in fade-in duration-200">
-                          {/* Description */}
-                          <div className="p-3 rounded-xl bg-[#141414] border border-[#222] text-xs text-[#CCC] space-y-1">
-                            <div className="text-[10px] text-[#777] uppercase font-bold">ОПИСАНИЕ И ИНСТРУКЦИЯ ПО ЗАПУСКУ:</div>
-                            <p>{item.submission.description}</p>
-                            {item.submission.launchInstructions && (
-                              <div className="text-[11px] text-[#888] font-mono mt-1 pt-1 border-t border-[#262626]">
-                                <strong>Запуск:</strong> {item.submission.launchInstructions}
-                              </div>
-                            )}
-                          </div>
+                        <td className="py-4 px-5 text-right font-display font-black text-lg text-[#c8ff3d]">
+                          {item.avgTotal} <span className="text-xs text-[#5c647e] font-mono">/ 40</span>
+                        </td>
 
-                          {/* Criteria Full Breakdown */}
-                          <div>
-                            <div className="text-[10px] text-[#888] uppercase mb-2 font-bold">
-                              БАЛЛЫ ПО КРИТЕРИЯМ ОЦЕНКИ (СРЕДНЕЕ ЖЮРИ):
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                              {criteriaList.map((crit) => {
-                                const sc = item.criterionAverages[crit.id] || 0;
-                                const percent = (sc / (crit.maxScore || 10)) * 100;
-                                return (
-                                  <div key={crit.id} className="p-3 rounded-xl bg-[#141414] border border-[#262626] space-y-1.5">
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="text-[#AAA] font-bold truncate">{crit.name}</span>
-                                      <span className="text-[#BAFF00] font-bold font-mono">{sc} / 10</span>
-                                    </div>
-                                    <div className="w-full bg-[#202020] h-1.5 rounded-full overflow-hidden">
-                                      <div
-                                        className="bg-[#BAFF00] h-full rounded-full transition-all duration-500"
-                                        style={{ width: `${percent}%` }}
-                                      />
-                                    </div>
-                                    <div className="text-[9px] text-[#666] line-clamp-1">{crit.description}</div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Judge Feedback Quotes */}
-                          {item.judgements.length > 0 && (
-                            <div>
-                              <div className="text-[10px] text-[#888] uppercase mb-2 font-bold flex items-center gap-1.5">
-                                <ShieldCheck className="w-3.5 h-3.5 text-[#BAFF00]" />
-                                <span>РЕЦЕНЗИИ И КОММЕНТАРИИ ЖЮРИ:</span>
-                              </div>
-                              <div className="space-y-2">
-                                {item.judgements.map((jud) => (
-                                  <div key={jud.id} className="p-3 rounded-xl bg-[#141414] border border-[#262626] text-xs text-[#CCC] flex items-start gap-2.5">
-                                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#1f1f1f] text-cyan-300 font-bold border border-[#333] shrink-0">
-                                      {jud.judgeName}
-                                    </span>
-                                    <div className="flex-1">
-                                      <p className="italic text-[#BBB]">«{jud.feedback || "Без комментария"}»</p>
-                                    </div>
-                                    <div className="text-right shrink-0">
-                                      <span className="text-[#BAFF00] font-bold font-mono text-xs">{jud.totalScore} / 40</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Action Links */}
-                          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                            <div className="flex items-center gap-2">
-                              {item.submission.demoUrl && (
-                                <a
-                                  href={item.submission.demoUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="px-3 py-1.5 rounded-xl bg-[#181818] hover:bg-[#222] text-[#BAFF00] border border-[#333] text-xs flex items-center gap-1.5 font-bold transition-all"
-                                >
-                                  <ExternalLink className="w-3.5 h-3.5" />
-                                  <span>Открыть Демо</span>
-                                </a>
-                              )}
-                              {item.submission.repoUrl && (
-                                <a
-                                  href={item.submission.repoUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="px-3 py-1.5 rounded-xl bg-[#181818] hover:bg-[#222] text-white border border-[#333] text-xs flex items-center gap-1.5 font-bold transition-all"
-                                >
-                                  <Github className="w-3.5 h-3.5" />
-                                  <span>Репозиторий</span>
-                                </a>
-                              )}
-                            </div>
-
-                            {(currentRole === "judge" || currentRole === "organizer") && onNavigateToJudging && (
-                              <button
-                                onClick={onNavigateToJudging}
-                                className="px-3.5 py-1.5 rounded-xl bg-[#BAFF00] hover:bg-[#c9ff33] text-black text-xs font-bold uppercase flex items-center gap-1.5 shadow-[0_0_10px_rgba(186,255,0,0.3)]"
+                        <td className="py-4 px-5 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            {item.submission.demoUrl && (
+                              <a
+                                href={item.submission.demoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1.5 rounded-lg bg-[#121627] hover:bg-[#1e2436] text-[#41f0ff] border border-[#2a3148] transition-all"
+                                title="Открыть демо"
                               >
-                                <Star className="w-3.5 h-3.5" />
-                                <span>Оценить как жюри</span>
-                              </button>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
                             )}
+                            {item.submission.githubUrl && (
+                              <a
+                                href={item.submission.githubUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1.5 rounded-lg bg-[#121627] hover:bg-[#1e2436] text-white border border-[#2a3148] transition-all"
+                                title="Репозиторий"
+                              >
+                                <Github className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                            <button
+                              onClick={() => setExpandedRowId(isExpanded ? null : item.submission.id)}
+                              className="p-1.5 rounded-lg bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] border border-[#2a3148] transition-all"
+                              title="Развернуть детали"
+                            >
+                              {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </button>
                           </div>
-                        </div>
+                        </td>
+                      </tr>
+
+                      {/* Expanded Criteria Breakdown Row */}
+                      {isExpanded && (
+                        <tr className="bg-[#0a0c14]/90 border-b border-[#1e2436]">
+                          <td colSpan={6} className="p-6 space-y-4">
+                            <div className="text-xs font-bold text-[#41f0ff] uppercase tracking-wider">
+                              Детализация оценок по критериям:
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                              {criteriaList.map((c) => (
+                                <div key={c.id} className="p-3.5 rounded-2xl bg-[#0e111c] border border-[#1e2436]">
+                                  <div className="text-[10px] text-[#8b93ad] uppercase truncate">{c.name}</div>
+                                  <div className="font-display font-black text-xl text-white mt-1">
+                                    {item.criterionAverages[c.id] || 0} <span className="text-xs text-[#5c647e]">/ 10</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </div>
+                    </React.Fragment>
                   );
                 })}
-              </div>
-            )}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
+      ) : activeTab === "activity" ? (
+        <div className="bg-[#0e111c] border border-[#1e2436] rounded-3xl overflow-hidden shadow-2xl font-mono">
+          <div className="p-4 bg-[#0a0c14] border-b border-[#1e2436] flex items-center justify-between text-xs text-[#8b93ad]">
+            <span>Показатель активности рассчитывается по публикациям в Devlog и темпу разработки</span>
+            <span className="text-[#c8ff3d] font-bold">SOCIAL SCORE (НЕ ВЛИЯЕТ НА СУДЕЙ)</span>
+          </div>
 
-        {/* TAB 2: LIVE ACTIVITY PULSE (Velocity) */}
-        {activeTab === "activity" && (
-          <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-[#121212] border border-[#262626] text-xs text-[#AAA] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Flame className="w-4 h-4 text-orange-400" />
-                <span>Баллы активности начисляются за каждый Devlog-апдейт (+3), реакцию (+1), коммит и достижение MVP (+10).</span>
-              </div>
-              <span className="text-[10px] text-[#BAFF00] font-mono">LIVE SSE SYNC</span>
-            </div>
-
-            <div className="space-y-2.5">
-              {filteredActivity.map((item, idx) => (
-                <div
-                  key={item.teamId || item.authorId || idx}
-                  className={`p-4 rounded-2xl border transition-all flex flex-wrap items-center justify-between gap-4 ${
-                    idx === 0
-                      ? "bg-[#141414] border-[#BAFF00]/40"
-                      : "bg-[#101010] hover:bg-[#141414] border-[#222]"
-                  }`}
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <span
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
-                        idx === 0 ? "bg-[#BAFF00] text-black" : idx === 1 ? "bg-white text-black" : "bg-[#1c1c1c] text-[#777]"
-                      }`}
-                    >
-                      #{idx + 1}
-                    </span>
-
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-white truncate">{item.name}</span>
-                        {item.tag && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#181818] text-[#888] border border-[#2a2a2a]">
-                            {item.tag}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-[#777] truncate mt-0.5">
-                        Проект: <strong className="text-[#CCC]">{item.projectTitle || "В процессе разработки"}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    {item.mvpReached && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-[#BAFF00]/15 text-[#BAFF00] font-bold border border-[#BAFF00]/30 flex items-center gap-1">
-                        <Zap className="w-3 h-3" />
-                        <span>MVP ГОТОВ</span>
-                      </span>
-                    )}
-
-                    {item.submitted && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-bold border border-cyan-500/30 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>СДАНО</span>
-                      </span>
-                    )}
-
-                    <div className="text-right pl-2 border-l border-[#262626]">
-                      <div className="text-lg font-black text-[#BAFF00] font-mono">
-                        {item.eventsCount}
-                      </div>
-                      <div className="text-[9px] text-[#777] uppercase">PTS</div>
+          <div className="divide-y divide-[#1e2436]">
+            {filteredActivity.map((item, idx) => (
+              <div key={item.id} className="p-5 flex items-center justify-between hover:bg-[#121627] transition-colors">
+                <div className="flex items-center gap-4 min-w-0">
+                  <span className={`font-display font-bold text-xl ${idx === 0 ? "text-[#c8ff3d]" : idx === 1 ? "text-[#41f0ff]" : "text-[#5c647e]"}`}>
+                    {idx < 9 ? `0${idx + 1}` : idx + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm text-white truncate">{item.name}</div>
+                    <div className="text-xs text-[#8b93ad] mt-0.5">
+                      Проект: <strong className="text-[#41f0ff]">{item.projectTitle || "В разработке"}</strong>
                     </div>
                   </div>
                 </div>
-              ))}
+
+                <div className="text-right shrink-0">
+                  <div className="font-display font-black text-lg text-[#c8ff3d]">
+                    {item.eventsCount * 12} pts
+                  </div>
+                  <div className="text-[10px] text-[#5c647e] uppercase">Devlog Activity</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        /* SPECIAL AWARDS */
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="p-6 rounded-3xl bg-[#0e111c] border border-[#c8ff3d]/30 space-y-3">
+            <div className="text-3xl">🚀</div>
+            <h3 className="font-display font-bold text-lg text-white">Best Technical Solution</h3>
+            <p className="text-xs text-[#8b93ad] font-body">
+              Присуждается за самую надежную и элегантную архитектуру кода и чистоту реализации.
+            </p>
+            <div className="pt-2 text-xs font-mono text-[#c8ff3d] font-bold">
+              Номинант: Team Zero (Hackflow OS)
             </div>
           </div>
-        )}
 
-        {/* TAB 3: SPECIAL AWARDS NOMINATIONS */}
-        {activeTab === "awards" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {(hackathon?.specialAwards || [
-              { id: "best-vibe", title: "Лучший Live-Vibe & Атмосфера", icon: "⚡", description: "За создание самой живой атмосферы соревнования и высокую интерактивность" },
-              { id: "best-ai", title: "AI-Инновация (Host Engine)", icon: "🧠", description: "За глубокую интеграцию AI-хоста без галлюцинаций с аудиосинтезом" },
-              { id: "best-design", title: "Идеальный UI/UX", icon: "🎨", description: "За безупречный киберпанк/esports интерфейс и удобство Devlog" },
-              { id: "speed-demon", title: "Скоростной MVP", icon: "🚀", description: "Команде, первой показавшей полностью работающий прототип" }
-            ]).map((award) => {
-              const leadingContender = scoredSubmissions[0];
-              return (
-                <div
-                  key={award.id}
-                  className="p-5 rounded-2xl bg-[#121212] border border-[#262626] hover:border-[#BAFF00]/40 transition-all space-y-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-10 h-10 rounded-xl bg-[#181818] border border-[#333] flex items-center justify-center text-xl shadow-inner">
-                      {award.icon}
-                    </span>
-                    <div>
-                      <h4 className="text-sm font-black text-white uppercase">{award.title}</h4>
-                      <span className="text-[10px] text-[#BAFF00] uppercase font-bold">ОФИЦИАЛЬНАЯ НОМИНАЦИЯ</span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-[#AAA] leading-relaxed">
-                    {award.description}
-                  </p>
-
-                  <div className="pt-2 border-t border-[#222] flex items-center justify-between text-xs">
-                    <span className="text-[#777]">Лидер номинации:</span>
-                    <span className="text-white font-bold">
-                      {award.winnerProjectTitle || leadingContender?.submission.title || "Определяется жюри"}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="p-6 rounded-3xl bg-[#0e111c] border border-[#41f0ff]/30 space-y-3">
+            <div className="text-3xl">🎨</div>
+            <h3 className="font-display font-bold text-lg text-white">Best Live UI & Vibe</h3>
+            <p className="text-xs text-[#8b93ad] font-body">
+              Награда за лучшую визуальную подачу, неоновую эстетику и динамику интерфейса.
+            </p>
+            <div className="pt-2 text-xs font-mono text-[#41f0ff] font-bold">
+              Номинант: Team Pixel (VibeStage)
+            </div>
           </div>
-        )}
-      </section>
+
+          <div className="p-6 rounded-3xl bg-[#0e111c] border border-[#ff3da6]/30 space-y-3">
+            <div className="text-3xl">🤖</div>
+            <h3 className="font-display font-bold text-lg text-white">Best AI Host Integration</h3>
+            <p className="text-xs text-[#8b93ad] font-body">
+              Самое глубокое и органичное внедрение Gemini и речевого синтеза в игровой процесс.
+            </p>
+            <div className="pt-2 text-xs font-mono text-[#ff3da6] font-bold">
+              Номинант: EventLoop (Тимур Алиев)
+            </div>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-[#0e111c] border border-[#8f7bff]/30 space-y-3">
+            <div className="text-3xl">⚡</div>
+            <h3 className="font-display font-bold text-lg text-white">Speedrun MVP Award</h3>
+            <p className="text-xs text-[#8b93ad] font-body">
+              Приз за рекордную скорость достижения рабочего MVP с момента старта хакатона.
+            </p>
+            <div className="pt-2 text-xs font-mono text-[#8f7bff] font-bold">
+              Номинант: VibeCheck (Максим Орлов)
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

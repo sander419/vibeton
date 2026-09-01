@@ -5,6 +5,15 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import type {
   Hackathon,
+  CompetitionEvent,
+  EventTemplateType,
+  DuelState,
+  DuelParticipant,
+  DuelRoundLog,
+  SubmissionGateReport,
+  FinalShowRecap,
+  Role,
+  EventSummaryCard,
   User,
   Team,
   Project,
@@ -47,6 +56,10 @@ function getGenAI(): GoogleGenAI | null {
 // In-Memory Database Store with Demo Seed
 interface Store {
   hackathon: Hackathon;
+  eventsList: CompetitionEvent[];
+  activeEventId: string;
+  duels: Record<string, DuelState>;
+  recaps: Record<string, FinalShowRecap>;
   users: User[];
   teams: Team[];
   projects: Project[];
@@ -64,6 +77,7 @@ interface Store {
 function generateInitialStore(): Store {
   const hackathon: Hackathon = {
     id: "vibeathon-2",
+    templateType: "VIBEATHON",
     title: "Вайбатон №2",
     theme: "Платформа для проведения Вайбатонов",
     description: "Создайте живую платформу для проведения онлайн-хакатонов и челленджей с акцентом на динамику, AI-хостинг, прозрачность прогресса и вовлеченность участников.",
@@ -92,7 +106,11 @@ function generateInitialStore(): Store {
       { id: "best-ai", title: "AI-Инновация", icon: "🧠", description: "За глубокую интеграцию AI-хоста без галлюцинаций" },
       { id: "best-design", title: "Идеальный UI/UX", icon: "🎨", description: "За безупречный киберпанк/esports интерфейс" },
       { id: "speed-demon", title: "Скоростной MVP", icon: "🚀", description: "Команде, первой показавшей рабочий прототип" }
-    ]
+    ],
+    visibility: "PUBLIC",
+    participantsCount: 28,
+    teamsCount: 7,
+    submissionsCount: 3
   };
 
   const users: User[] = [
@@ -755,8 +773,189 @@ function generateInitialStore(): Store {
     }
   ];
 
+  const eventsList: CompetitionEvent[] = [
+    hackathon,
+    {
+      id: "duel-42",
+      templateType: "DUEL",
+      title: "Cyber Duel #42: Prompt to Prod",
+      theme: "Live 1v1 Battle: AI Video Agent in 15 Min",
+      description: "Живая дуэль двух архитекторов в реальном времени с раундами, живым кодингом, демонстрацией экранов и мгновенным голосованием зрителей.",
+      rules: [
+        "3 раунда по 5 минут",
+        "Раунд 1: Архитектура и схема данных",
+        "Раунд 2: Интеграция Gemini 3.7 API и WebRTC",
+        "Раунд 3: Live Demo и питч зрителям",
+        "Победитель определяется по сумме баллов жюри и голосов зрителей"
+      ],
+      criteria: [
+        { id: "speed", name: "Скорость реализации", description: "Быстрота сборки рабочего решения", maxScore: 10 },
+        { id: "arch", name: "Качество архитектуры", description: "Надежность и масштабируемость", maxScore: 10 },
+        { id: "wow", name: "Live Wow-эффект", description: "Убедительность демо в прямом эфире", maxScore: 10 }
+      ],
+      stage: "ACTIVE",
+      startTime: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+      endTime: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+      submissionDeadline: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+      maxTeamSize: 1,
+      organizerId: "usr-admin",
+      organizerName: "Fix-Ed Team",
+      specialAwards: [
+        { id: "duel-champ", title: "Cyber Duel Champion", icon: "👑", description: "Победитель 1v1 поединка" },
+        { id: "crowd-favorite", title: "Любимец публики", icon: "🔥", description: "Наибольшее количество голосов зрителей" }
+      ],
+      visibility: "PUBLIC",
+      participantsCount: 2,
+      teamsCount: 2,
+      submissionsCount: 2
+    },
+    {
+      id: "challenge-speed-1",
+      templateType: "SPEED_RUN",
+      title: "Speed Run: Gemini Function Calling CRUD",
+      theme: "Fastest Fullstack CRUD API with GenAI",
+      description: "Соревнование на скорость: создайте работающий REST/SSE сервис с вызовом функций Gemini за минимальное время.",
+      rules: [
+        "Индивидуальный зачет",
+        "Автоматическая верификация через тестовые сценарии",
+        "Штраф 2 минуты за каждый упавший тест"
+      ],
+      criteria: [
+        { id: "time", name: "Время завершения", description: "Минимальное время прохождения тестов", maxScore: 10 },
+        { id: "clean_code", name: "Чистота кода", description: "Типизация и структура", maxScore: 10 }
+      ],
+      stage: "REGISTRATION",
+      startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      endTime: new Date(Date.now() + 2.5 * 24 * 60 * 60 * 1000).toISOString(),
+      submissionDeadline: new Date(Date.now() + 2.5 * 24 * 60 * 60 * 1000).toISOString(),
+      maxTeamSize: 1,
+      organizerId: "usr-admin",
+      organizerName: "Fix-Ed Team",
+      specialAwards: [
+        { id: "fastest-coder", title: "Zero Latency Dev", icon: "⚡", description: "Абсолютный рекорд скорости" }
+      ],
+      visibility: "PUBLIC",
+      participantsCount: 19,
+      teamsCount: 19,
+      submissionsCount: 0
+    },
+    {
+      id: "vibeathon-1",
+      templateType: "VIBEATHON",
+      title: "Вайбатон №1: Telegram AI Mini Apps",
+      theme: "Автономные AI-агенты в Telegram WebApp",
+      description: "Первый исторический Вайбатон Fix-Ed. 34 команды создали 26 работающих Telegram Mini Apps за 7 дней.",
+      rules: [
+        "Интеграция Telegram WebApp SDK",
+        "Работающий AI-пайплайн",
+        "Видеодемонстрация до 3 минут"
+      ],
+      criteria: [
+        { id: "mvp", name: "Рабочий MVP", description: "Работоспособность в клиенте Telegram", maxScore: 10 },
+        { id: "ai", name: "AI Инновация", description: "Полезность агента", maxScore: 10 }
+      ],
+      stage: "RESULTS",
+      startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      endTime: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000).toISOString(),
+      submissionDeadline: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000).toISOString(),
+      maxTeamSize: 4,
+      organizerId: "usr-admin",
+      organizerName: "Fix-Ed Team",
+      specialAwards: [
+        { id: "winner-1", title: "Гран-При Вайбатон №1", icon: "🏆", description: "Команда TeleAgent за автономного бота поддержки" }
+      ],
+      visibility: "PUBLIC",
+      participantsCount: 42,
+      teamsCount: 14,
+      submissionsCount: 11
+    }
+  ];
+
+  const duels: Record<string, DuelState> = {
+    "duel-42": {
+      id: "duel-42",
+      eventId: "duel-42",
+      title: "Cyber Duel #42: Prompt to Prod",
+      topic: "Live Architecture: AI Video Agent in 15 Minutes",
+      currentRound: 2,
+      totalRounds: 3,
+      roundDurationSec: 300,
+      roundRemainingSec: 184,
+      roundStatus: "RUNNING",
+      participantA: {
+        id: "usr-1",
+        name: "Иван Ковалев",
+        username: "ivan_dev",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+        role: "Fullstack Architect",
+        score: 88,
+        votes: 142,
+        streamActive: true,
+        bio: "Senior Fullstack Architect. Специализируется на WebRTC, Realtime сокетах и React 19.",
+        techStack: ["React 19", "Node.js", "WebAudio", "Vite"],
+        cameraEnabled: true,
+        micEnabled: true
+      },
+      participantB: {
+        id: "usr-3",
+        name: "Максим Орлов",
+        username: "max_fullstack",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+        role: "AI Core Dev",
+        score: 85,
+        votes: 119,
+        streamActive: true,
+        bio: "AI Engineer & System Architect. Создает многоагентные системы и потоковую обработку данных.",
+        techStack: ["Gemini 3.7", "Python", "FastAPI", "Docker"],
+        cameraEnabled: true,
+        micEnabled: true
+      },
+      roundLogs: [
+        {
+          round: 1,
+          winnerParticipantId: "usr-1",
+          scoreA: 45,
+          scoreB: 42,
+          votesA: 89,
+          votesB: 71,
+          summary: "Раунд 1 (Архитектура и схема): Иван вырвался вперед за счет четкой WebRTC-диаграммы и мгновенного каркаса интерфейса.",
+          completedAt: new Date(Date.now() - 8 * 60 * 1000).toISOString()
+        }
+      ],
+      audienceVotingOpen: true,
+      lastUpdated: new Date().toISOString()
+    }
+  };
+
+  const recaps: Record<string, FinalShowRecap> = {
+    "vibeathon-1": {
+      summary: "Вайбатон №1 стал триумфом автономных AI-агентов в экосистеме Telegram. За 7 дней состязания 34 инженера создали 26 инновационных микро-сервисов.",
+      highlights: [
+        "Команда TeleAgent представила первый zero-latency бот с голосовым вводом через Gemini",
+        "100% команд сдали работающие MVP до дедлайна",
+        "Более 500 живых зрителей наблюдали за финальным стримом"
+      ],
+      statsHighlight: {
+        totalParticipants: 42,
+        totalTeams: 14,
+        totalProjects: 12,
+        totalPosts: 84,
+        mvpCount: 11,
+        submissionsCount: 11,
+        firstMvpTeam: "TeleAgent",
+        firstMvpTime: "через 18 часов после старта"
+      },
+      winnerStory: "Проект TeleAgent покорил экспертное жюри благодаря мгновенному отклику и чистой интеграции WebApp SDK с серверной LLM-логикой.",
+      closingWords: "Вайбатон №1 доказал, что неделя напряженной фокусировки может создать продукты, меняющие индустрию!"
+    }
+  };
+
   return {
     hackathon,
+    eventsList,
+    activeEventId: "vibeathon-2",
+    duels,
+    recaps,
     users,
     teams,
     projects,
@@ -878,6 +1077,16 @@ app.get("/api/events/stream", (req, res) => {
   });
 });
 
+// Helper for Role Permission Checking
+function isAuthorized(userRole: string | undefined, allowedRoles: string[]): boolean {
+  if (!userRole) return false;
+  if (userRole === "admin" || userRole === "organizer") return true;
+  return allowedRoles.includes(userRole);
+}
+
+// Track voter IDs for Anti-Spam in live Duels (DuelId:Round -> Set<VoterId>)
+const duelVotesRegistry: Record<string, Set<string>> = {};
+
 // Full state snapshot
 app.get("/api/state", (req, res) => {
   const leaderboard = computeLeaderboard();
@@ -885,6 +1094,371 @@ app.get("/api/state", (req, res) => {
     ...store,
     leaderboard
   });
+});
+
+// ----------------------------------------------------
+// MULTI-EVENT & DISCOVERY ENGINE
+// ----------------------------------------------------
+
+// List all competition events with metadata & counters
+app.get("/api/events", (req, res) => {
+  const summaryList: EventSummaryCard[] = store.eventsList.map(ev => {
+    let participantsCount = store.users.filter(u => u.role === "participant").length;
+    let teamsCount = store.teams.length;
+    let submissionsCount = store.submissions.length;
+
+    if (ev.id === "duel-42") {
+      participantsCount = 2;
+      teamsCount = 2;
+      submissionsCount = 2;
+    } else if (ev.id === "challenge-speed-1") {
+      participantsCount = 19;
+      teamsCount = 19;
+      submissionsCount = 0;
+    } else if (ev.id === "vibeathon-1") {
+      participantsCount = 42;
+      teamsCount = 14;
+      submissionsCount = 11;
+    }
+
+    return {
+      id: ev.id,
+      templateType: ev.templateType,
+      title: ev.title,
+      theme: ev.theme,
+      description: ev.description,
+      stage: ev.stage,
+      statusText: ev.stage === "ACTIVE" ? "LIVE NOW" : (ev.stage === "REGISTRATION" ? "UPCOMING" : "COMPLETED"),
+      participantsCount,
+      teamsCount,
+      submissionsCount,
+      isLive: ev.stage === "ACTIVE" || ev.stage === "SUBMISSION" || ev.stage === "JUDGING",
+      startTime: ev.startTime,
+      endTime: ev.endTime,
+      deadline: ev.submissionDeadline,
+      organizerName: ev.organizerName,
+      bannerUrl: ev.bannerUrl,
+      hasRecap: !!store.recaps[ev.id]
+    };
+  });
+
+  res.json({
+    events: summaryList,
+    activeEventId: store.activeEventId,
+    activeEvent: store.hackathon
+  });
+});
+
+// Get details of a single event
+app.get("/api/events/:id", (req, res) => {
+  const eventId = req.params.id;
+  const ev = store.eventsList.find(e => e.id === eventId);
+  if (!ev) return res.status(404).json({ error: "Событие не найдено" });
+
+  const duel = store.duels[eventId] || null;
+  const recap = store.recaps[eventId] || null;
+
+  res.json({
+    event: ev,
+    duel,
+    recap,
+    isCurrentActive: store.activeEventId === eventId
+  });
+});
+
+// Switch active event context
+app.post("/api/events/switch", (req, res) => {
+  const { eventId } = req.body;
+  const target = store.eventsList.find(e => e.id === eventId);
+  if (!target) return res.status(404).json({ error: "Событие не найдено" });
+
+  store.activeEventId = target.id;
+  store.hackathon = target;
+
+  recordEvent("EVENT_STARTED", `Активное соревнование переключено на: "${target.title}" [${target.templateType}]`, {
+    metadata: { eventId: target.id, template: target.templateType }
+  });
+
+  broadcastSSE("event_switched", { activeEventId: target.id, hackathon: target });
+  res.json({ success: true, activeEvent: target });
+});
+
+// Create a new event (Organizer only)
+app.post("/api/events/create", (req, res) => {
+  const { templateType, title, theme, description, rules, criteria, durationHours, organizerId, userRole } = req.body;
+  
+  if (!title) {
+    return res.status(400).json({ error: "Название соревнования обязательно" });
+  }
+
+  const newId = `event-${Date.now()}`;
+  const hours = Number(durationHours) || 72;
+  const newEvent: CompetitionEvent = {
+    id: newId,
+    templateType: templateType || "VIBEATHON",
+    title,
+    theme: theme || title,
+    description: description || "Новое соревнование на платформе Competition OS",
+    rules: Array.isArray(rules) ? rules : ["Создайте рабочий прототип", "Опубликуйте Devlog"],
+    criteria: Array.isArray(criteria) ? criteria : [
+      { id: "mvp", name: "MVP", description: "Работоспособность", maxScore: 10 },
+      { id: "vibe", name: "Vibe & UX", description: "Пользовательский опыт", maxScore: 10 }
+    ],
+    stage: "REGISTRATION",
+    startTime: new Date().toISOString(),
+    endTime: new Date(Date.now() + hours * 60 * 60 * 1000).toISOString(),
+    submissionDeadline: new Date(Date.now() + hours * 60 * 60 * 1000).toISOString(),
+    maxTeamSize: templateType === "DUEL" || templateType === "SPEED_RUN" ? 1 : 4,
+    organizerId: organizerId || "usr-admin",
+    organizerName: "Fix-Ed Team",
+    specialAwards: [],
+    visibility: "PUBLIC",
+    participantsCount: 0,
+    teamsCount: 0,
+    submissionsCount: 0
+  };
+
+  // If DUEL template, instantiate DuelState
+  if (templateType === "DUEL") {
+    store.duels[newId] = {
+      id: newId,
+      eventId: newId,
+      title,
+      topic: theme || title,
+      currentRound: 1,
+      totalRounds: 3,
+      roundDurationSec: 300,
+      roundRemainingSec: 300,
+      roundStatus: "IDLE",
+      participantA: {
+        id: "usr-1",
+        name: "Иван Ковалев",
+        username: "ivan_dev",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+        role: "Fullstack Architect",
+        score: 0,
+        votes: 0,
+        streamActive: true,
+        techStack: ["React 19", "Node.js"],
+        cameraEnabled: true,
+        micEnabled: true
+      },
+      participantB: {
+        id: "usr-3",
+        name: "Максим Орлов",
+        username: "max_fullstack",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+        role: "AI Core Dev",
+        score: 0,
+        votes: 0,
+        streamActive: true,
+        techStack: ["Gemini 3.7", "Python"],
+        cameraEnabled: true,
+        micEnabled: true
+      },
+      roundLogs: [],
+      audienceVotingOpen: false,
+      lastUpdated: new Date().toISOString()
+    };
+  }
+
+  store.eventsList.unshift(newEvent);
+  recordEvent("EVENT_STARTED", `Создано новое событие: "${newEvent.title}" (${newEvent.templateType})`, {
+    actorName: "Организатор"
+  });
+
+  broadcastSSE("event_created", newEvent);
+  res.json({ event: newEvent });
+});
+
+// Control Event Lifecycle (Start, Stage Advance, End)
+app.post("/api/events/control", (req, res) => {
+  const { eventId, stage, action } = req.body;
+  const ev = store.eventsList.find(e => e.id === (eventId || store.activeEventId));
+  if (!ev) return res.status(404).json({ error: "Событие не найдено" });
+
+  const oldStage = ev.stage;
+  if (stage && stage !== oldStage) {
+    ev.stage = stage as HackathonStage;
+    if (ev.id === store.hackathon.id) {
+      store.hackathon.stage = stage as HackathonStage;
+    }
+    recordEvent("STAGE_CHANGED", `Этап события "${ev.title}" изменен на: ${stage}`, {
+      metadata: { eventId: ev.id, oldStage, newStage: stage }
+    });
+  }
+
+  broadcastSSE("event_updated", ev);
+  res.json({ event: ev, success: true });
+});
+
+// ----------------------------------------------------
+// DUEL & 1V1 BATTLE ENGINE
+// ----------------------------------------------------
+
+// Control Duel Rounds, Scores, and Timers
+app.post("/api/duel/action", (req, res) => {
+  const { duelId, action, round, scoreA, scoreB, votesA, votesB, winnerId, summary } = req.body;
+  const targetId = duelId || "duel-42";
+  const duel = store.duels[targetId];
+
+  if (!duel) return res.status(404).json({ error: "Дуэль не найдена" });
+
+  if (action === "START_ROUND") {
+    duel.roundStatus = "RUNNING";
+    duel.currentRound = round || duel.currentRound;
+    duel.roundRemainingSec = duel.roundDurationSec;
+    duel.audienceVotingOpen = true;
+    recordEvent("ROUND_STARTED", `⚔️ Дуэль: Старт Раунда ${duel.currentRound} ("${duel.topic}")`, {
+      metadata: { duelId: duel.id, round: duel.currentRound }
+    });
+  } else if (action === "PAUSE_ROUND") {
+    duel.roundStatus = "PAUSED";
+  } else if (action === "RESUME_ROUND") {
+    duel.roundStatus = "RUNNING";
+  } else if (action === "END_ROUND") {
+    duel.roundStatus = "IDLE";
+    duel.audienceVotingOpen = false;
+    
+    // Append round log
+    const roundLog: DuelRoundLog = {
+      round: duel.currentRound,
+      winnerParticipantId: (scoreA ?? duel.participantA.score) >= (scoreB ?? duel.participantB.score) ? duel.participantA.id : duel.participantB.id,
+      scoreA: scoreA ?? duel.participantA.score,
+      scoreB: scoreB ?? duel.participantB.score,
+      votesA: votesA ?? duel.participantA.votes,
+      votesB: votesB ?? duel.participantB.votes,
+      summary: summary || `Раунд ${duel.currentRound} завершен. Счет: ${scoreA ?? duel.participantA.score} : ${scoreB ?? duel.participantB.score}`,
+      completedAt: new Date().toISOString()
+    };
+    duel.roundLogs.push(roundLog);
+
+    recordEvent("ROUND_FINISHED", `🔔 Раунд ${duel.currentRound} дуэли завершен! Победитель раунда: ${roundLog.winnerParticipantId === duel.participantA.id ? duel.participantA.name : duel.participantB.name}`, {
+      metadata: { duelId: duel.id, roundLog }
+    });
+
+    if (duel.currentRound < duel.totalRounds) {
+      duel.currentRound += 1;
+      duel.roundRemainingSec = duel.roundDurationSec;
+    } else {
+      duel.roundStatus = "COMPLETED";
+    }
+  } else if (action === "SET_SCORE") {
+    if (scoreA !== undefined) duel.participantA.score = Number(scoreA);
+    if (scoreB !== undefined) duel.participantB.score = Number(scoreB);
+    recordEvent("SCORE_UPDATED", `📊 Обновлен счет дуэли: ${duel.participantA.name} (${duel.participantA.score}) vs ${duel.participantB.name} (${duel.participantB.score})`);
+  } else if (action === "TOGGLE_VOTING") {
+    duel.audienceVotingOpen = !duel.audienceVotingOpen;
+  } else if (action === "FINISH_DUEL") {
+    duel.roundStatus = "COMPLETED";
+    duel.audienceVotingOpen = false;
+    duel.winnerId = winnerId || (duel.participantA.score + duel.participantA.votes >= duel.participantB.score + duel.participantB.votes ? duel.participantA.id : duel.participantB.id);
+    const winnerName = duel.winnerId === duel.participantA.id ? duel.participantA.name : duel.participantB.name;
+    
+    recordEvent("DUEL_ENDED", `👑 Дуэль завершена! Победитель: ${winnerName}!`, {
+      metadata: { duelId: duel.id, winnerId: duel.winnerId, winnerName }
+    });
+  }
+
+  duel.lastUpdated = new Date().toISOString();
+  broadcastSSE("duel_updated", duel);
+  res.json({ duel });
+});
+
+// Audience Live Voting with Anti-Spam Gate
+app.post("/api/duel/vote", (req, res) => {
+  const { duelId, participantId, voterId } = req.body;
+  const targetId = duelId || "duel-42";
+  const duel = store.duels[targetId];
+
+  if (!duel) return res.status(404).json({ error: "Дуэль не найдена" });
+  if (!duel.audienceVotingOpen) return res.status(400).json({ error: "Голосование закрыто" });
+
+  const voteKey = `${targetId}:r${duel.currentRound}`;
+  if (!duelVotesRegistry[voteKey]) {
+    duelVotesRegistry[voteKey] = new Set();
+  }
+
+  const clientVoter = voterId || req.ip || "anon";
+  if (duelVotesRegistry[voteKey].has(clientVoter)) {
+    return res.status(429).json({ error: "Вы уже проголосовали в этом раунде!" });
+  }
+
+  duelVotesRegistry[voteKey].add(clientVoter);
+
+  if (participantId === duel.participantA.id || participantId === "A") {
+    duel.participantA.votes += 1;
+  } else if (participantId === duel.participantB.id || participantId === "B") {
+    duel.participantB.votes += 1;
+  } else {
+    return res.status(400).json({ error: "Некорректный ID участника" });
+  }
+
+  recordEvent("AUDIENCE_VOTE", `🔥 Зритель отдал голос за ${participantId === duel.participantA.id ? duel.participantA.name : duel.participantB.name}`, {
+    metadata: { duelId: duel.id, votesA: duel.participantA.votes, votesB: duel.participantB.votes }
+  });
+
+  broadcastSSE("duel_voted", {
+    duelId: duel.id,
+    votesA: duel.participantA.votes,
+    votesB: duel.participantB.votes,
+    lastVoteFor: participantId
+  });
+
+  res.json({ success: true, votesA: duel.participantA.votes, votesB: duel.participantB.votes });
+});
+
+// ----------------------------------------------------
+// SUBMISSION GATES & VERIFICATION
+// ----------------------------------------------------
+
+// Automated pre-submission verification
+app.post("/api/submissions/validate-gate", (req, res) => {
+  const { repoUrl, demoUrl, launchInstructions, checklist, videoUrl } = req.body;
+
+  const repoValid = !!repoUrl && (repoUrl.includes("github.com") || repoUrl.includes("gitlab.com") || repoUrl.startsWith("http"));
+  const repoGate = {
+    valid: repoValid,
+    status: repoUrl?.includes("github.com") ? ('PASS' as const) : (repoUrl?.startsWith("http") ? ('WARN' as const) : ('FAIL' as const)),
+    details: repoUrl ? `Репозиторий: ${repoUrl}` : "Ссылка на репозиторий не указана",
+    message: repoValid ? "Git-репозиторий валиден и доступен для жюри" : "Требуется ссылка на открытый GitHub или GitLab репозиторий"
+  };
+
+  const demoValid = !!demoUrl && (demoUrl.startsWith("http://") || demoUrl.startsWith("https://"));
+  const demoGate = {
+    valid: demoValid,
+    status: demoUrl?.startsWith("https://") ? ('PASS' as const) : (demoUrl?.startsWith("http://") ? ('WARN' as const) : ('FAIL' as const)),
+    details: demoUrl ? `Live URL: ${demoUrl}` : "Ссылка на демонстрацию не указана",
+    message: demoValid ? "Live Demo проверено и доступно" : "Укажите рабочий URL с развернутым приложением (https://...)"
+  };
+
+  const instrLen = launchInstructions?.trim().length || 0;
+  const readmeGate = {
+    valid: instrLen >= 15,
+    status: instrLen >= 40 ? ('PASS' as const) : (instrLen >= 15 ? ('WARN' as const) : ('FAIL' as const)),
+    details: `Объем инструкций: ${instrLen} символов`,
+    message: instrLen >= 15 ? "Инструкция по запуску присутствует" : "Опишите шаги для запуска проекта (минимум 15 символов)"
+  };
+
+  const checklistPassed = checklist?.mvpWorks && checklist?.demoAvailable && checklist?.repoAvailable;
+  const instructionsGate = {
+    valid: !!checklistPassed,
+    status: (checklistPassed && checklist?.instructionsAdded) ? ('PASS' as const) : ('WARN' as const),
+    details: `Чеклист: ${Object.values(checklist || {}).filter(Boolean).length}/5 пунктов`,
+    message: checklistPassed ? "Чеклист самопроверки MVP пройден" : "Подтвердите ключевые пункты готовности проекта"
+  };
+
+  const overallPass = repoGate.valid && demoGate.valid && readmeGate.valid;
+
+  const report: SubmissionGateReport = {
+    repoGate,
+    demoGate,
+    readmeGate,
+    instructionsGate,
+    overallPass
+  };
+
+  res.json({ report });
 });
 
 // Switch or Register Active User
@@ -1266,9 +1840,14 @@ app.post("/api/chat/pin", (req, res) => {
 
 // Submit Final Project
 app.post("/api/submissions/create", (req, res) => {
-  const { projectId, authorId, title, description, demoUrl, repoUrl, videoUrl, launchInstructions, techStack, checklist } = req.body;
+  const { projectId, authorId, title, description, demoUrl, repoUrl, videoUrl, launchInstructions, techStack, checklist, userRole } = req.body;
   const project = store.projects.find(p => p.id === projectId);
   const author = store.users.find(u => u.id === authorId);
+
+  // Check stage & deadline (Rule 5 & Phase 12)
+  if ((store.hackathon.stage === "RESULTS" || store.hackathon.stage === "ARCHIVED") && userRole !== "organizer" && userRole !== "admin") {
+    return res.status(403).json({ error: "Прием работ завершен: хакатон перешел в стадию подведения итогов" });
+  }
 
   if (!repoUrl || !demoUrl || !title) {
     return res.status(400).json({ error: "Пожалуйста, заполните все обязательные поля (GitHub, Demo URL, Название)" });
@@ -1311,6 +1890,13 @@ app.post("/api/submissions/create", (req, res) => {
     project.submittedTimestamp = submission.submittedAt;
     project.updatedAt = submission.submittedAt;
   }
+
+  recordEvent("GATE_VERIFIED", `🛡️ Проект "${submission.title}" успешно прошел автоматические submission-гейты (Repo & Live Demo)!`, {
+    actorId: submission.authorId,
+    actorName: submission.authorName,
+    projectId: submission.projectId,
+    projectTitle: submission.title
+  });
 
   recordEvent("SUBMISSION_CREATED", `🏁 ${submission.teamName || submission.authorName} сдали финальную работу "${submission.title}"!`, {
     actorId: submission.authorId,
@@ -1739,9 +2325,11 @@ app.post("/api/ai/final-recap", async (req, res) => {
     }
   }
 
+  let finalRecapData: FinalShowRecap;
+
   if (!ai) {
-    return res.json({
-      summary: `7 дней назад начался Вайбатон №2 на тему "${store.hackathon.theme}". За это время ${stats.totalParticipants} участников объединились в ${stats.totalTeams} команд, опубликовали ${stats.totalPosts} обновлений прогресса и создали ${stats.submissionsCount} законченных решений. По решению экспертного жюри победил проект ${winnerTitle} (${winnerTeam}).`,
+    finalRecapData = {
+      summary: `7 дней назад начался ${store.hackathon.title} на тему "${store.hackathon.theme}". За это время ${stats.totalParticipants} участников объединились в ${stats.totalTeams} команд, опубликовали ${stats.totalPosts} обновлений прогресса и создали ${stats.submissionsCount} законченных решений. По решению экспертного жюри победил проект ${winnerTitle} (${winnerTeam}).`,
       highlights: [
         `Первый рабочий MVP появился от ${stats.firstMvpTeam}`,
         `Опубликовано ${stats.totalPosts} записей в ленту Devlog`,
@@ -1749,12 +2337,11 @@ app.post("/api/ai/final-recap", async (req, res) => {
       ],
       statsHighlight: stats,
       winnerStory: `Проект ${winnerTitle} продемонстрировал непрерывную динамику и полное соответствие критериям хакатона.`,
-      closingWords: "Вайбатон №2 завершен. Но история этого соревнования и созданные продукты остаются с нами!"
-    });
-  }
-
-  try {
-    const prompt = `Ты — AI Host хакатона "Вайбатон №2". Хакатон завершен, экспертное жюри выставило свои оценки.
+      closingWords: `${store.hackathon.title} завершен. Но история этого соревнования и созданные продукты остаются с нами!`
+    };
+  } else {
+    try {
+      const prompt = `Ты — AI Host хакатона "${store.hackathon.title}". Хакатон завершен, экспертное жюри выставило свои оценки.
 Твоя задача — создать эпичный, кинематографичный итоговый обзор недели (AI Final Show).
 Это НЕ твоя субъективная оценка, а хроника реальных событий и подведение итогов работы участников.
 
@@ -1773,24 +2360,33 @@ app.post("/api/ai/final-recap", async (req, res) => {
   "closingWords": "Финальная вдохновляющая фраза ведущего..."
 }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.7-flash",
-      contents: prompt,
-      config: { responseMimeType: "application/json" }
-    });
+      const response = await ai.models.generateContent({
+        model: "gemini-3.7-flash",
+        contents: prompt,
+        config: { responseMimeType: "application/json" }
+      });
 
-    const recap = JSON.parse(response.text || "{}");
-    res.json(recap);
-  } catch (e) {
-    console.error("AI Final Recap error:", e);
-    res.json({
-      summary: `Вайбатон №2 подошел к концу! ${stats.totalParticipants} участников создали ${stats.submissionsCount} проектов.`,
-      highlights: ["Активная разработка", "Регулярный Devlog", "Сплоченная работа команд"],
-      statsHighlight: stats,
-      winnerStory: `Победителем признан проект ${winnerTitle}`,
-      closingWords: "Вайбатон закончился. Но его история осталась."
-    });
+      finalRecapData = JSON.parse(response.text || "{}");
+    } catch (e) {
+      console.error("AI Final Recap error:", e);
+      finalRecapData = {
+        summary: `${store.hackathon.title} подошел к концу! ${stats.totalParticipants} участников создали ${stats.submissionsCount} проектов.`,
+        highlights: ["Активная разработка", "Регулярный Devlog", "Сплоченная работа команд"],
+        statsHighlight: stats,
+        winnerStory: `Победителем признан проект ${winnerTitle}`,
+        closingWords: "Соревнование закончилось. Но его история осталась."
+      };
+    }
   }
+
+  // Persist recap in store
+  store.recaps[store.hackathon.id] = finalRecapData;
+  recordEvent("RESULTS_PUBLISHED", `🎬 AI Host подготовил официальный AI Final Show Recap для "${store.hackathon.title}"`, {
+    actorName: "AI Host"
+  });
+
+  broadcastSSE("recap_generated", { eventId: store.hackathon.id, recap: finalRecapData });
+  res.json(finalRecapData);
 });
 
 // Reset Store with Fresh Demo Seed

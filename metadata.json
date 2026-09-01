@@ -1,6 +1,6 @@
 {
-  "name": "Вайбатон — Платформа соревнований",
-  "description": "Платформа для проведения живых онлайн-хакатонов и Вайбатонов с AI Host, Devlog, live activity и судейством.",
-  "requestFramePermissions": [],
+  "name": "Competition OS — Live Event & Battle Engine",
+  "description": "Операционная система для проведения живых цифровых соревнований (Вайбатоны, 1v1 Дуэли, Челленджи, Питчи) с Event Engine, AI Host, судейством и Observer Mode.",
+  "requestFramePermissions": ["camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

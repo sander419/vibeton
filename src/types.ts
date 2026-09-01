@@ -1,4 +1,17 @@
-export type Role = 'guest' | 'participant' | 'organizer' | 'judge';
+export type Role = 'guest' | 'observer' | 'participant' | 'team_leader' | 'judge' | 'organizer' | 'admin';
+
+export type EventTemplateType =
+  | 'VIBEATHON'
+  | 'DUEL'
+  | 'CHALLENGE'
+  | 'TEAM_BATTLE'
+  | 'SPEED_RUN'
+  | 'PITCH'
+  | 'WORKSHOP'
+  | 'TOURNAMENT'
+  | 'DEMO_DAY'
+  | 'REVIEW'
+  | 'COMMUNITY_JAM';
 
 export type HackathonStage = 
   | 'DRAFT'
@@ -46,8 +59,9 @@ export interface SpecialAward {
   winnerProjectTitle?: string;
 }
 
-export interface Hackathon {
+export interface CompetitionEvent {
   id: string;
+  templateType: EventTemplateType;
   title: string;
   theme: string;
   description: string;
@@ -62,7 +76,15 @@ export interface Hackathon {
   organizerId: string;
   organizerName: string;
   specialAwards: SpecialAward[];
+  visibility?: 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
+  config?: Record<string, any>;
+  participantsCount?: number;
+  teamsCount?: number;
+  submissionsCount?: number;
 }
+
+// Backward-compatible alias
+export type Hackathon = CompetitionEvent;
 
 export interface TeamMember {
   userId: string;
@@ -146,6 +168,7 @@ export interface Comment {
 
 export type EventType =
   | 'HACKATHON_STARTED'
+  | 'EVENT_STARTED'
   | 'USER_JOINED'
   | 'TEAM_CREATED'
   | 'TEAM_INVITE'
@@ -154,14 +177,23 @@ export type EventType =
   | 'MVP_MARKED'
   | 'DEMO_POSTED'
   | 'SUBMISSION_CREATED'
+  | 'GATE_VERIFIED'
   | 'STAGE_CHANGED'
   | 'JUDGING_STARTED'
   | 'RESULTS_PUBLISHED'
-  | 'AI_HOST_BROADCAST';
+  | 'AI_HOST_BROADCAST'
+  | 'DUEL_CREATED'
+  | 'DUEL_STARTED'
+  | 'ROUND_STARTED'
+  | 'ROUND_FINISHED'
+  | 'SCORE_UPDATED'
+  | 'AUDIENCE_VOTE'
+  | 'DUEL_ENDED';
 
 export interface EventItem {
   id: string;
   hackathonId: string;
+  eventId?: string;
   type: EventType;
   actorId?: string;
   actorName?: string;
@@ -172,7 +204,96 @@ export interface EventItem {
   projectTitle?: string;
   message: string;
   metadata?: Record<string, any>;
+  visibility?: 'PUBLIC' | 'ORGANIZER' | 'JUDGE' | 'TEAM';
   createdAt: string;
+}
+
+export type EventLogItem = EventItem;
+
+// ----------------------------------------------------
+// DUEL / 1V1 BATTLE MODEL
+// ----------------------------------------------------
+export interface DuelParticipant {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  role: string;
+  score: number;
+  votes: number;
+  streamActive: boolean;
+  streamUrl?: string;
+  bio?: string;
+  techStack?: string[];
+  cameraEnabled?: boolean;
+  micEnabled?: boolean;
+}
+
+export interface DuelRoundLog {
+  round: number;
+  winnerParticipantId?: string;
+  scoreA: number;
+  scoreB: number;
+  votesA: number;
+  votesB: number;
+  summary: string;
+  completedAt: string;
+}
+
+export interface DuelState {
+  id: string;
+  eventId: string;
+  title: string;
+  topic: string;
+  currentRound: number;
+  totalRounds: number;
+  roundDurationSec: number;
+  roundRemainingSec: number;
+  roundStatus: 'IDLE' | 'RUNNING' | 'PAUSED' | 'COMPLETED';
+  participantA: DuelParticipant;
+  participantB: DuelParticipant;
+  winnerId?: string;
+  roundLogs: DuelRoundLog[];
+  audienceVotingOpen: boolean;
+  lastUpdated: string;
+}
+
+// ----------------------------------------------------
+// SUBMISSION GATES MODEL
+// ----------------------------------------------------
+export interface SubmissionGateCheck {
+  valid: boolean;
+  status: 'PASS' | 'WARN' | 'FAIL';
+  details: string;
+  message: string;
+}
+
+export interface SubmissionGateReport {
+  repoGate: SubmissionGateCheck;
+  demoGate: SubmissionGateCheck;
+  readmeGate: SubmissionGateCheck;
+  instructionsGate: SubmissionGateCheck;
+  overallPass: boolean;
+}
+
+export interface EventSummaryCard {
+  id: string;
+  templateType: EventTemplateType;
+  title: string;
+  theme: string;
+  description: string;
+  stage: HackathonStage;
+  statusText: string;
+  participantsCount: number;
+  teamsCount: number;
+  submissionsCount: number;
+  isLive: boolean;
+  startTime: string;
+  endTime: string;
+  deadline: string;
+  organizerName: string;
+  bannerUrl?: string;
+  hasRecap?: boolean;
 }
 
 export interface AIHostMessage {

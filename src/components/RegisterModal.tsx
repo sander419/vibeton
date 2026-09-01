@@ -54,50 +54,50 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in font-mono">
-      <div className="bg-[#0A0A0A] border border-[#333] rounded-3xl w-full max-w-lg shadow-2xl p-6">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#262626]">
+      <div className="bg-[#0a0c14] border border-[#1e2436] rounded-3xl w-full max-w-lg shadow-2xl p-6">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#1e2436]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#151515] text-[#BAFF00] border border-[#333] flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-[#121627] text-[#c8ff3d] border border-[#2a3148] flex items-center justify-center font-bold">
               <UserPlus className="w-4 h-4" />
             </div>
             <h3 className="text-base sm:text-lg font-bold text-white font-mono uppercase tracking-wider">Регистрация на Вайбатон</h3>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl bg-[#151515] hover:bg-[#222] text-[#888] hover:text-white border border-[#333] transition-colors">
+          <button onClick={onClose} className="p-2 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-white border border-[#2a3148] transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 font-mono">
           <div>
-            <label className="text-xs font-mono text-[#888] uppercase block mb-1">Имя и Фамилия / Никнейм *</label>
+            <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Имя и Фамилия / Никнейм *</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Алексей Смирнов"
-              className="w-full bg-[#111] border border-[#333] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#BAFF00]"
+              className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
             />
           </div>
 
           <div>
-            <label className="text-xs font-mono text-[#888] uppercase block mb-1">Telegram / Fix-Ed ник</label>
+            <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Telegram / Fix-Ed ник</label>
             <input
               type="text"
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
               placeholder="@alex_dev"
-              className="w-full bg-[#111] border border-[#333] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#BAFF00]"
+              className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-mono text-[#888] uppercase block mb-1">Роль в хакатоне</label>
+              <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Роль в хакатоне</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as Role)}
-                className="w-full bg-[#111] border border-[#333] text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-[#BAFF00] font-mono"
+                className="w-full bg-[#0e111c] border border-[#2a3148] text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-[#c8ff3d] font-mono"
               >
                 <option value="participant">Участник</option>
                 <option value="judge">Судья</option>
@@ -107,36 +107,36 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
             </div>
 
             <div>
-              <label className="text-xs font-mono text-[#888] uppercase block mb-1">Специализация</label>
+              <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Специализация</label>
               <input
                 type="text"
                 value={primaryRole}
                 onChange={(e) => setPrimaryRole(e.target.value)}
                 placeholder="Frontend, Backend, AI"
-                className="w-full bg-[#111] border border-[#333] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#BAFF00]"
+                className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-mono text-[#888] uppercase block mb-1">Стек и ключевые навыки</label>
+            <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">Стек и ключевые навыки</label>
             <input
               type="text"
               value={skillsInput}
               onChange={(e) => setSkillsInput(e.target.value)}
               placeholder="React, TypeScript, Node.js, Python, Tailwind"
-              className="w-full bg-[#111] border border-[#333] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#BAFF00]"
+              className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d]"
             />
           </div>
 
           <div>
-            <label className="text-xs font-mono text-[#888] uppercase block mb-1">О себе / Что планируете делать</label>
+            <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">О себе / Что планируете делать</label>
             <textarea
               rows={2}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Ищу команду или готовлю соло-проект..."
-              className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-xs text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#BAFF00] resize-none"
+              className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl p-3 text-xs text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d] resize-none"
             />
           </div>
 
@@ -144,14 +144,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose })
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-mono uppercase text-[#888] hover:text-white"
+              className="px-4 py-2 rounded-xl text-xs font-mono uppercase text-[#8b93ad] hover:text-white"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 rounded-xl bg-[#BAFF00] hover:bg-[#d4ff33] text-black font-bold font-mono uppercase text-xs shadow-[0_0_12px_rgba(186,255,0,0.3)] transition-all"
+              className="px-5 py-2 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff5e] text-[#06070c] font-black font-mono uppercase text-xs shadow-[0_0_12px_rgba(200,255,61,0.3)] transition-all"
             >
               Зарегистрироваться
             </button>

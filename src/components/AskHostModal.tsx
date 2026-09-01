@@ -48,24 +48,24 @@ export const AskHostModal: React.FC<AskHostModalProps> = ({ isOpen, onClose }) =
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in font-mono">
-      <div className="bg-[#0A0A0A] border border-[#333] rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div className="bg-[#0a0c14] border border-[#1e2436] rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[#262626] bg-[#111] flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-[#1e2436] bg-[#0e111c] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#151515] border border-[#333] flex items-center justify-center text-[#BAFF00] font-bold">
+            <div className="w-10 h-10 rounded-xl bg-[#121627] border border-[#2a3148] flex items-center justify-center text-[#c8ff3d] font-bold">
               <Bot className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Диалог с AI Host</h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#BAFF00]/10 text-[#BAFF00] border border-[#BAFF00]/30">LIVE</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#c8ff3d]/10 text-[#c8ff3d] border border-[#c8ff3d]/30">LIVE</span>
               </div>
-              <p className="text-xs text-[#888] font-mono">Ведущий знает все правила, таймлайн и контекст события</p>
+              <p className="text-xs text-[#8b93ad] font-mono">Ведущий знает все правила, таймлайн и контекст события</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#151515] hover:bg-[#222] text-[#888] hover:text-white border border-[#333] transition-colors"
+            className="p-2 rounded-xl bg-[#121627] hover:bg-[#1e2436] text-[#8b93ad] hover:text-white border border-[#2a3148] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -79,11 +79,11 @@ export const AskHostModal: React.FC<AskHostModalProps> = ({ isOpen, onClose }) =
               className={`flex items-start gap-3 ${m.sender === "user" ? "flex-row-reverse" : ""}`}
             >
               {m.sender === "host" ? (
-                <div className="w-8 h-8 rounded-lg bg-[#151515] border border-[#333] text-[#BAFF00] flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-[#121627] border border-[#2a3148] text-[#c8ff3d] flex items-center justify-center shrink-0">
                   <Bot className="w-4 h-4" />
                 </div>
               ) : (
-                <div className="w-8 h-8 rounded-lg bg-[#BAFF00] text-black font-bold flex items-center justify-center shrink-0 text-xs">
+                <div className="w-8 h-8 rounded-lg bg-[#c8ff3d] text-[#06070c] font-black flex items-center justify-center shrink-0 text-xs">
                   YOU
                 </div>
               )}
@@ -91,8 +91,8 @@ export const AskHostModal: React.FC<AskHostModalProps> = ({ isOpen, onClose }) =
               <div
                 className={`max-w-[80%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
                   m.sender === "user"
-                    ? "bg-[#BAFF00] text-black font-bold shadow-[0_0_10px_rgba(186,255,0,0.2)]"
-                    : "bg-[#111] border border-[#262626] text-[#DDD]"
+                    ? "bg-[#c8ff3d] text-[#06070c] font-bold shadow-[0_0_12px_rgba(200,255,61,0.25)]"
+                    : "bg-[#0e111c] border border-[#1e2436] text-[#DDD]"
                 }`}
               >
                 <div className="whitespace-pre-line">{m.text}</div>
@@ -102,10 +102,10 @@ export const AskHostModal: React.FC<AskHostModalProps> = ({ isOpen, onClose }) =
 
           {isLoading && (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#151515] text-[#BAFF00] border border-[#333] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-[#121627] text-[#c8ff3d] border border-[#2a3148] flex items-center justify-center">
                 <Loader2 className="w-4 h-4 animate-spin" />
               </div>
-              <div className="bg-[#111] border border-[#262626] rounded-2xl p-3.5 text-xs font-mono text-[#BAFF00] flex items-center gap-2">
+              <div className="bg-[#0e111c] border border-[#1e2436] rounded-2xl p-3.5 text-xs font-mono text-[#c8ff3d] flex items-center gap-2">
                 <span>AI Host формулирует ответ по регламенту хакатона...</span>
               </div>
             </div>
@@ -113,14 +113,14 @@ export const AskHostModal: React.FC<AskHostModalProps> = ({ isOpen, onClose }) =
         </div>
 
         {/* Quick Suggestion Chips */}
-        <div className="px-4 py-2.5 bg-black border-t border-[#222] flex items-center gap-2 overflow-x-auto no-scrollbar font-mono">
+        <div className="px-4 py-2.5 bg-[#06070c] border-t border-[#1e2436] flex items-center gap-2 overflow-x-auto no-scrollbar font-mono">
           {quickPrompts.map((p, idx) => (
             <button
               key={idx}
               onClick={() => {
                 setQuestion(p);
               }}
-              className="text-[11px] whitespace-nowrap px-3 py-1 rounded-full bg-[#111] hover:bg-[#1A1A1A] hover:text-[#BAFF00] border border-[#262626] transition-colors text-[#AAA]"
+              className="text-[11px] whitespace-nowrap px-3 py-1 rounded-full bg-[#0e111c] hover:bg-[#121627] hover:text-[#c8ff3d] border border-[#1e2436] transition-colors text-[#8b93ad]"
             >
               {p}
             </button>
@@ -128,18 +128,18 @@ export const AskHostModal: React.FC<AskHostModalProps> = ({ isOpen, onClose }) =
         </div>
 
         {/* Input Form */}
-        <form onSubmit={handleSend} className="p-4 border-t border-[#262626] bg-[#0D0D0D] flex items-center gap-2 font-mono">
+        <form onSubmit={handleSend} className="p-4 border-t border-[#1e2436] bg-[#080a10] flex items-center gap-2 font-mono">
           <input
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Спросите ведущего о правилах, критериях, командах..."
-            className="flex-1 bg-[#151515] border border-[#333] rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#BAFF00] transition-colors"
+            className="flex-1 bg-[#0e111c] border border-[#2a3148] rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d] transition-colors"
           />
           <button
             type="submit"
             disabled={!question.trim() || isLoading}
-            className="px-4 py-2.5 rounded-xl bg-[#BAFF00] hover:bg-[#d4ff33] disabled:opacity-50 text-black font-bold font-mono uppercase text-xs flex items-center gap-1.5 shadow-[0_0_10px_rgba(186,255,0,0.3)] transition-all"
+            className="px-4 py-2.5 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff5e] disabled:opacity-50 text-[#06070c] font-black font-mono uppercase text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(200,255,61,0.3)] transition-all"
           >
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Спросить</span>

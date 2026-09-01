@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type {
   Hackathon,
+  CompetitionEvent,
+  EventTemplateType,
+  DuelState,
+  SubmissionGateReport,
+  FinalShowRecap,
   User,
   Team,
   Project,
@@ -15,13 +20,18 @@ import type {
   LeaderboardItem,
   HackathonStage,
   Role,
-  TeamMatchSuggestion,
-  FinalShowRecap
+  TeamMatchSuggestion
 } from "../types";
 import { sound } from "../utils/audio";
 
 interface HackathonContextType {
   hackathon: Hackathon | null;
+  eventsList: CompetitionEvent[];
+  activeEventId: string;
+  duels: Record<string, DuelState>;
+  recaps: Record<string, FinalShowRecap>;
+  activeDuel: DuelState | null;
+  activeRecap: FinalShowRecap | null;
   users: User[];
   teams: Team[];
   projects: Project[];
@@ -43,6 +53,12 @@ interface HackathonContextType {
   setCurrentUser: (user: User | null) => void;
   setCurrentRole: (role: Role) => void;
   switchActiveUser: (userId: string) => void;
+  switchEvent: (eventId: string) => Promise<void>;
+  createEvent: (data: any) => Promise<CompetitionEvent>;
+  controlEvent: (eventId: string, stage: HackathonStage) => Promise<void>;
+  sendDuelAction: (action: string, payload?: any) => Promise<void>;
+  voteDuel: (participantId: string) => Promise<void>;
+  validateSubmissionGate: (data: any) => Promise<SubmissionGateReport>;
   registerUser: (userData: Partial<User>) => Promise<User>;
   updateHackathon: (data: Partial<Hackathon>) => Promise<void>;
   createTeam: (teamData: { name: string; tag?: string; description?: string; lookingForRoles?: string[] }) => Promise<Team>;
@@ -69,6 +85,10 @@ const HackathonContext = createContext<HackathonContextType | undefined>(undefin
 
 export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hackathon, setHackathon] = useState<Hackathon | null>(null);
+  const [eventsList, setEventsList] = useState<CompetitionEvent[]>([]);
+  const [activeEventId, setActiveEventId] = useState<string>("vibeathon-2");
+  const [duels, setDuels] = useState<Record<string, DuelState>>({});
+  const [recaps, setRecaps] = useState<Record<string, FinalShowRecap>>({});
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -96,6 +116,10 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const applyState = (data: any) => {
     if (data.hackathon) setHackathon(data.hackathon);
+    if (data.eventsList) setEventsList(data.eventsList);
+    if (data.activeEventId) setActiveEventId(data.activeEventId);
+    if (data.duels) setDuels(data.duels);
+    if (data.recaps) setRecaps(data.recaps);
     if (data.users) {
       setUsers(data.users);
       // If no currentUser set yet, default to first participant or ivan
@@ -150,8 +174,56 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const newEvent = JSON.parse(e.data);
         setEvents(prev => [newEvent, ...prev.filter(ev => ev.id !== newEvent.id)].slice(0, 100));
         sound.playPulse();
-        // Refresh leaderboard & activity
         refreshState();
+      });
+
+      eventSource.addEventListener("event_switched", (e) => {
+        const data = JSON.parse(e.data);
+        if (data.activeEventId) setActiveEventId(data.activeEventId);
+        if (data.hackathon) setHackathon(data.hackathon);
+        sound.playPulse();
+        refreshState();
+      });
+
+      eventSource.addEventListener("event_created", (e) => {
+        const ev = JSON.parse(e.data);
+        setEventsList(prev => [ev, ...prev.filter(x => x.id !== ev.id)]);
+        sound.playCelebration();
+      });
+
+      eventSource.addEventListener("event_updated", (e) => {
+        const ev = JSON.parse(e.data);
+        setEventsList(prev => prev.map(x => x.id === ev.id ? ev : x));
+        if (ev.id === activeEventId) {
+          setHackathon(ev);
+        }
+      });
+
+      eventSource.addEventListener("duel_updated", (e) => {
+        const duel = JSON.parse(e.data);
+        setDuels(prev => ({ ...prev, [duel.id]: duel }));
+      });
+
+      eventSource.addEventListener("duel_voted", (e) => {
+        const { duelId, votesA, votesB } = JSON.parse(e.data);
+        setDuels(prev => {
+          if (!prev[duelId]) return prev;
+          return {
+            ...prev,
+            [duelId]: {
+              ...prev[duelId],
+              participantA: { ...prev[duelId].participantA, votes: votesA },
+              participantB: { ...prev[duelId].participantB, votes: votesB }
+            }
+          };
+        });
+        sound.playPop();
+      });
+
+      eventSource.addEventListener("recap_generated", (e) => {
+        const { eventId, recap } = JSON.parse(e.data);
+        setRecaps(prev => ({ ...prev, [eventId]: recap }));
+        sound.playCelebration();
       });
 
       eventSource.addEventListener("post_created", (e) => {
@@ -222,7 +294,7 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (eventSource) eventSource.close();
       clearInterval(interval);
     };
-  }, [refreshState]);
+  }, [refreshState, activeEventId]);
 
   const switchActiveUser = (userId: string) => {
     const found = users.find(u => u.id === userId);
@@ -230,6 +302,102 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setCurrentUser(found);
       setCurrentRole(found.role);
     }
+  };
+
+  const switchEvent = async (eventId: string) => {
+    try {
+      const res = await fetch("/api/events/switch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId })
+      });
+      const data = await res.json();
+      if (data.success && data.activeEvent) {
+        setActiveEventId(eventId);
+        setHackathon(data.activeEvent);
+        sound.playPulse();
+        refreshState();
+      }
+    } catch (e) {
+      console.error("Failed to switch event:", e);
+    }
+  };
+
+  const createEvent = async (eventData: any): Promise<CompetitionEvent> => {
+    const res = await fetch("/api/events/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...eventData,
+        organizerId: currentUser?.id,
+        userRole: currentRole
+      })
+    });
+    const data = await res.json();
+    if (data.event) {
+      setEventsList(prev => [data.event, ...prev]);
+      sound.playCelebration();
+      return data.event;
+    }
+    throw new Error(data.error || "Ошибка создания события");
+  };
+
+  const controlEvent = async (eventId: string, stage: HackathonStage) => {
+    const res = await fetch("/api/events/control", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventId, stage })
+    });
+    const data = await res.json();
+    if (data.event) {
+      setEventsList(prev => prev.map(e => e.id === data.event.id ? data.event : e));
+      if (data.event.id === activeEventId) {
+        setHackathon(data.event);
+      }
+      sound.playCelebration();
+    }
+  };
+
+  const sendDuelAction = async (action: string, payload: any = {}) => {
+    const targetDuelId = payload.duelId || activeEventId || "duel-42";
+    const res = await fetch("/api/duel/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ duelId: targetDuelId, action, ...payload })
+    });
+    const data = await res.json();
+    if (data.duel) {
+      setDuels(prev => ({ ...prev, [data.duel.id]: data.duel }));
+      sound.playPulse();
+    }
+  };
+
+  const voteDuel = async (participantId: string) => {
+    const targetDuelId = activeEventId === "duel-42" ? "duel-42" : (duels[activeEventId]?.id || "duel-42");
+    const res = await fetch("/api/duel/vote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        duelId: targetDuelId,
+        participantId,
+        voterId: currentUser?.id || `voter-${Math.random().toString(36).substr(2, 6)}`
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Ошибка при голосовании");
+    }
+    sound.playCelebration();
+  };
+
+  const validateSubmissionGate = async (data: any): Promise<SubmissionGateReport> => {
+    const res = await fetch("/api/submissions/validate-gate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    const resData = await res.json();
+    return resData.report;
   };
 
   const registerUser = async (userData: Partial<User>): Promise<User> => {
@@ -311,18 +479,16 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...projectData,
-        authorId: currentUser?.id || "usr-1",
-        teamId: currentUser?.teamId
+        teamId: currentUser?.teamId,
+        authorId: currentUser?.id || "usr-1"
       })
     });
     const data = await res.json();
     if (data.project) {
       setProjects(prev => {
-        const idx = prev.findIndex(p => p.id === data.project.id);
-        if (idx > -1) {
-          const next = [...prev];
-          next[idx] = data.project;
-          return next;
+        const exists = prev.find(p => p.id === data.project.id);
+        if (exists) {
+          return prev.map(p => p.id === data.project.id ? data.project : p);
         }
         return [...prev, data.project];
       });
@@ -332,59 +498,56 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     throw new Error(data.error || "Ошибка сохранения проекта");
   };
 
-  const createPost = async (postData: any): Promise<ProgressPost> => {
-    const userTeam = teams.find(t => t.id === currentUser?.teamId);
-    const userProject = projects.find(p => p.teamId === currentUser?.teamId || p.authorId === currentUser?.id);
+  const createPost = async (postData: { content: string; polishedContent?: string; mediaType?: any; mediaUrl?: string; status?: any; milestone?: string; category?: any }): Promise<ProgressPost> => {
+    if (!currentUser) throw new Error("Пользователь не авторизован");
+    const userProj = projects.find(p => p.authorId === currentUser.id || p.teamId === currentUser.teamId);
 
     const res = await fetch("/api/posts/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...postData,
-        projectId: userProject?.id || "proj-1",
-        authorId: currentUser?.id || "usr-1"
+        authorId: currentUser.id,
+        teamId: currentUser.teamId,
+        projectId: userProj?.id
       })
     });
     const data = await res.json();
     if (data.post) {
-      setPosts(prev => [data.post, ...prev]);
-      sound.playPop();
+      setPosts(prev => [data.post, ...prev.filter(p => p.id !== data.post.id)]);
+      sound.playPulse();
       return data.post;
     }
-    throw new Error(data.error || "Ошибка публикации поста");
+    throw new Error(data.error || "Ошибка создания записи");
   };
 
   const reactToPost = async (postId: string, emoji: string) => {
-    if (!currentUser) return;
-    sound.playPop();
-    // Optimistic
-    setPosts(prev => prev.map(p => {
-      if (p.id !== postId) return p;
-      const reactions = { ...p.reactions };
-      if (!reactions[emoji]) reactions[emoji] = [];
-      const idx = reactions[emoji].indexOf(currentUser.id);
-      if (idx > -1) {
-        reactions[emoji] = reactions[emoji].filter(id => id !== currentUser.id);
-        if (reactions[emoji].length === 0) delete reactions[emoji];
-      } else {
-        reactions[emoji] = [...reactions[emoji], currentUser.id];
-      }
-      return { ...p, reactions };
-    }));
-
-    await fetch("/api/posts/react", {
+    const res = await fetch("/api/posts/react", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ postId, emoji, userId: currentUser.id })
+      body: JSON.stringify({
+        postId,
+        emoji,
+        userId: currentUser?.id || "guest"
+      })
     });
+    const data = await res.json();
+    if (data.reactions) {
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, reactions: data.reactions } : p));
+      sound.playPop();
+    }
   };
 
   const addComment = async (postId: string, content: string) => {
-    if (!currentUser || !content.trim()) return;
+    if (!currentUser) return;
     const res = await fetch("/api/posts/comment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ postId, authorId: currentUser.id, content })
+      body: JSON.stringify({
+        postId,
+        authorId: currentUser.id,
+        content
+      })
     });
     const data = await res.json();
     if (data.comment) {
@@ -395,13 +558,13 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const sendChatMessage = async (content: string) => {
-    if (!content.trim()) return;
+    if (!currentUser) return;
     const res = await fetch("/api/chat/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        content,
-        authorId: currentUser?.id || "guest"
+        authorId: currentUser.id,
+        content
       })
     });
     const data = await res.json();
@@ -424,21 +587,23 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const submitProject = async (submissionData: any): Promise<Submission> => {
-    const userProj = projects.find(p => p.teamId === currentUser?.teamId || p.authorId === currentUser?.id);
+    if (!currentUser) throw new Error("Пользователь не авторизован");
+    const userProj = projects.find(p => p.authorId === currentUser.id || p.teamId === currentUser.teamId);
+
     const res = await fetch("/api/submissions/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...submissionData,
+        authorId: currentUser.id,
         projectId: userProj?.id || submissionData.projectId,
-        authorId: currentUser?.id || "usr-1"
+        userRole: currentRole
       })
     });
     const data = await res.json();
     if (data.submission) {
       setSubmissions(prev => [...prev, data.submission]);
       sound.playCelebration();
-      refreshState();
       return data.submission;
     }
     throw new Error(data.error || "Ошибка отправки проекта");
@@ -525,7 +690,11 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       method: "POST",
       headers: { "Content-Type": "application/json" }
     });
-    return res.json();
+    const data = await res.json();
+    if (data && hackathon?.id) {
+      setRecaps(prev => ({ ...prev, [hackathon.id]: data }));
+    }
+    return data;
   };
 
   const resetDemoSeed = async () => {
@@ -534,10 +703,19 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     sound.playCelebration();
   };
 
+  const activeDuel = duels[activeEventId] || duels["duel-42"] || null;
+  const activeRecap = recaps[activeEventId] || null;
+
   return (
     <HackathonContext.Provider
       value={{
         hackathon,
+        eventsList,
+        activeEventId,
+        duels,
+        recaps,
+        activeDuel,
+        activeRecap,
         users,
         teams,
         projects,
@@ -559,6 +737,12 @@ export const HackathonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setCurrentUser,
         setCurrentRole,
         switchActiveUser,
+        switchEvent,
+        createEvent,
+        controlEvent,
+        sendDuelAction,
+        voteDuel,
+        validateSubmissionGate,
         registerUser,
         updateHackathon,
         createTeam,

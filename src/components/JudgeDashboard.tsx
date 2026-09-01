@@ -109,29 +109,37 @@ export const JudgeDashboard: React.FC = () => {
     await publishResults(awards);
   };
 
-  const criteriaList = [
-    { id: "mvp", title: "MVP & Техническая реализация", desc: "Работоспособность решения, архитектура, соответствие стеку" },
-    { id: "ai_host", title: "AI Host & Интеллектуальное ядро", desc: "Уровень интеграции AI, голосовые сводки, генерация контекста" },
+  const defaultCriteria = [
+    { id: "mvp", title: "MVP & Работоспособность", desc: "Работоспособность прототипа, стабильность и архитектура" },
+    { id: "ai_core", title: "AI Host & Интеллектуальное ядро", desc: "Уровень интеграции AI, голосовые сводки, генерация контекста" },
     { id: "ux_vibe", title: "Live-атмосфера и UX", desc: "Удобство Devlog, динамика, таймеры, звук, визуал" },
-    { id: "viability", title: "Польза для fix-ed.me", desc: "Готовность к встраиванию в fix-ed.me и проведению будущих хакатонов" }
+    { id: "viability", title: "Польза для платформы", desc: "Готовность к встраиванию в fix-ed.me и проведению будущих хакатонов" }
   ];
+
+  const criteriaList = hackathon?.criteria?.length
+    ? hackathon.criteria.map((c) => ({
+        id: c.id,
+        title: c.name,
+        desc: c.description
+      }))
+    : defaultCriteria;
 
   return (
     <div className="space-y-8 mb-8 font-mono">
       {/* Stage Context Banner */}
-      <div className="bg-[#0A0A0A] border border-[#333] rounded-3xl p-6 sm:p-8 flex flex-wrap items-center justify-between gap-4 shadow-2xl">
+      <div className="bg-[#0a0c14] border border-[#1e2436] rounded-3xl p-6 sm:p-8 flex flex-wrap items-center justify-between gap-4 shadow-2xl">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold text-[#BAFF00] uppercase tracking-wider">СУДЕЙСКАЯ КОЛЛЕГИЯ</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#151515] text-[#888] border border-[#333]">
+            <span className="text-xs font-mono font-bold text-[#c8ff3d] uppercase tracking-wider">СУДЕЙСКАЯ КОЛЛЕГИЯ</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0e111c] text-[#8b93ad] border border-[#2a3148]">
               ЭТАП: {hackathon?.stage}
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white font-mono uppercase tracking-wider mt-1">
             {hackathon?.stage === "RESULTS" ? "Официальные итоги Вайбатона №2" : "Экспертная оценка проектов"}
           </h2>
-          <p className="text-xs text-[#888] mt-1 font-mono">
-            Честное человеческое судейство с открытыми критериями оценки (1-10) и фидбеком
+          <p className="text-xs text-[#8b93ad] mt-1 font-mono">
+            Честное экспертное судейство с прозрачными критериями оценки (1-10) и фидбеком
           </p>
         </div>
 
@@ -140,7 +148,7 @@ export const JudgeDashboard: React.FC = () => {
           {hackathon?.stage !== "RESULTS" ? (
             <button
               onClick={handleFinalizeAndPublish}
-              className="px-4 py-2.5 rounded-xl bg-[#BAFF00] hover:bg-[#d4ff33] text-black font-bold font-mono uppercase text-xs flex items-center gap-2 shadow-[0_0_12px_rgba(186,255,0,0.3)] transition-all"
+              className="px-4 py-2.5 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff5e] text-[#06070c] font-black font-mono uppercase text-xs flex items-center gap-2 shadow-[0_0_15px_rgba(200,255,61,0.3)] transition-all"
             >
               <Trophy className="w-4 h-4" />
               <span>Опубликовать итоги</span>
@@ -148,7 +156,7 @@ export const JudgeDashboard: React.FC = () => {
           ) : (
             <button
               onClick={() => updateHackathon({ stage: "JUDGING" })}
-              className="px-3.5 py-2 rounded-xl bg-[#151515] hover:bg-[#222] text-xs font-mono uppercase text-[#AAA] border border-[#333]"
+              className="px-3.5 py-2 rounded-xl bg-[#0e111c] hover:bg-[#121627] text-xs font-mono uppercase text-[#8b93ad] border border-[#2a3148]"
             >
               Вернуть этап Судейства
             </button>
@@ -157,7 +165,7 @@ export const JudgeDashboard: React.FC = () => {
           <button
             onClick={handleLoadRecap}
             disabled={isLoadingRecap}
-            className="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#202020] text-[#BAFF00] border border-[#333] hover:border-[#BAFF00] text-xs font-bold font-mono uppercase flex items-center gap-2 transition-all"
+            className="px-4 py-2.5 rounded-xl bg-[#0e111c] hover:bg-[#121627] text-[#c8ff3d] border border-[#2a3148] hover:border-[#c8ff3d]/60 text-xs font-bold font-mono uppercase flex items-center gap-2 transition-all"
           >
             {isLoadingRecap ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
             <span>AI Recap финала</span>
@@ -167,15 +175,15 @@ export const JudgeDashboard: React.FC = () => {
 
       {/* WINNERS PODIUM & AWARDS (Visible when RESULTS stage is active or awards exist) */}
       {(hackathon?.stage === "RESULTS" || hackathon?.awards?.length) && (
-        <div className="bg-[#0A0A0A] border border-[#BAFF00]/40 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8">
+        <div className="bg-[#0a0c14] border border-[#c8ff3d]/40 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8">
           <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BAFF00]/10 border border-[#BAFF00]/30 text-[#BAFF00] text-xs font-mono font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c8ff3d]/10 border border-[#c8ff3d]/30 text-[#c8ff3d] text-xs font-mono font-bold uppercase tracking-wider">
               🏆 ОФИЦИАЛЬНОЕ НАГРАЖДЕНИЕ
             </div>
             <h3 className="text-2xl sm:text-3xl font-bold text-white font-mono uppercase tracking-wider">
               Победители Вайбатона №2
             </h3>
-            <p className="text-xs sm:text-sm text-[#AAA] max-w-xl mx-auto font-mono">
+            <p className="text-xs sm:text-sm text-[#8b93ad] max-w-xl mx-auto font-mono">
               Поздравляем команды с успешным созданием и защитой проектов автоматизации хакатонов!
             </p>
           </div>
@@ -183,48 +191,48 @@ export const JudgeDashboard: React.FC = () => {
           {/* Podium Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end pt-4">
             {/* 2nd Place */}
-            <div className="bg-[#111] border border-[#333] rounded-3xl p-6 text-center space-y-3 order-2 md:order-1">
+            <div className="bg-[#0e111c] border border-[#1e2436] rounded-3xl p-6 text-center space-y-3 order-2 md:order-1">
               <div className="text-3xl">🥈</div>
-              <div className="text-xs font-mono text-[#888] uppercase font-bold">2-е МЕСТО</div>
+              <div className="text-xs font-mono text-[#8b93ad] uppercase font-bold">2-е МЕСТО</div>
               <h4 className="text-lg font-bold text-white font-mono uppercase">
                 {hackathon?.awards?.[1]?.projectTitle || "VibePulse Studio"}
               </h4>
-              <p className="text-xs text-[#888] font-mono">
+              <p className="text-xs text-[#8b93ad] font-mono">
                 Команда: {hackathon?.awards?.[1]?.teamName || "Pulse Team"}
               </p>
-              <div className="text-xs text-[#BBB] bg-black p-3 rounded-2xl border border-[#222]">
+              <div className="text-xs text-[#b8c2db] bg-[#06070c] p-3 rounded-2xl border border-[#1e2436]">
                 {hackathon?.awards?.[1]?.reason || "Отличная скорость разработки MVP и чистая архитектура."}
               </div>
             </div>
 
             {/* 1st Place (Grand Prix) */}
-            <div className="bg-[#111] border-2 border-[#BAFF00] rounded-3xl p-8 text-center space-y-4 shadow-[0_0_20px_rgba(186,255,0,0.2)] order-1 md:order-2 transform md:-translate-y-4">
+            <div className="bg-[#0e111c] border-2 border-[#c8ff3d] rounded-3xl p-8 text-center space-y-4 shadow-[0_0_20px_rgba(200,255,61,0.2)] order-1 md:order-2 transform md:-translate-y-4">
               <div className="text-5xl animate-bounce">🏆</div>
-              <div className="text-xs font-mono text-[#BAFF00] uppercase font-bold tracking-widest">
+              <div className="text-xs font-mono text-[#c8ff3d] uppercase font-bold tracking-widest">
                 ГРАН-ПРИ ВАЙБАТОНА
               </div>
               <h4 className="text-xl sm:text-2xl font-bold text-white font-mono uppercase">
                 {hackathon?.awards?.[0]?.projectTitle || "FixEd Vibeathon Platform"}
               </h4>
-              <p className="text-xs sm:text-sm text-[#BAFF00] font-mono font-bold">
+              <p className="text-xs sm:text-sm text-[#c8ff3d] font-mono font-bold">
                 Команда: {hackathon?.awards?.[0]?.teamName || "CyberVibe Studio"}
               </p>
-              <div className="text-xs text-[#DDD] bg-black p-4 rounded-2xl border border-[#333] leading-relaxed">
+              <div className="text-xs text-[#e9edf8] bg-[#06070c] p-4 rounded-2xl border border-[#2a3148] leading-relaxed">
                 {hackathon?.awards?.[0]?.reason || "Комплексное решение с AI Host, сокет-эфиром, Devlog и интеграцией в fix-ed.me."}
               </div>
             </div>
 
             {/* 3rd / Special */}
-            <div className="bg-[#111] border border-[#333] rounded-3xl p-6 text-center space-y-3 order-3">
+            <div className="bg-[#0e111c] border border-[#1e2436] rounded-3xl p-6 text-center space-y-3 order-3">
               <div className="text-3xl">⚡</div>
-              <div className="text-xs font-mono text-[#BAFF00] uppercase font-bold">СПЕЦПРИЗ ЗА LIVE-VIBE</div>
+              <div className="text-xs font-mono text-[#c8ff3d] uppercase font-bold">СПЕЦПРИЗ ЗА LIVE-VIBE</div>
               <h4 className="text-lg font-bold text-white font-mono uppercase">
                 {hackathon?.awards?.[2]?.projectTitle || "FixEd Vibeathon Platform"}
               </h4>
-              <p className="text-xs text-[#888] font-mono">
+              <p className="text-xs text-[#8b93ad] font-mono">
                 Команда: {hackathon?.awards?.[2]?.teamName || "CyberVibe Studio"}
               </p>
-              <div className="text-xs text-[#BBB] bg-black p-3 rounded-2xl border border-[#222]">
+              <div className="text-xs text-[#b8c2db] bg-[#06070c] p-3 rounded-2xl border border-[#1e2436]">
                 {hackathon?.awards?.[2]?.reason || "Лучшая динамика трансляции и реализация звука ведущего."}
               </div>
             </div>
@@ -234,23 +242,23 @@ export const JudgeDashboard: React.FC = () => {
 
       {/* AI Final Recap (Cinematic Story of the Hackathon) */}
       {recapData && (
-        <div className="bg-[#0A0A0A] border border-[#333] rounded-3xl p-6 sm:p-8 space-y-4 animate-in fade-in">
+        <div className="bg-[#0a0c14] border border-[#1e2436] rounded-3xl p-6 sm:p-8 space-y-4 animate-in fade-in">
           <div className="flex items-center gap-3">
-            <Bot className="w-6 h-6 text-[#BAFF00]" />
+            <Bot className="w-6 h-6 text-[#c8ff3d]" />
             <div>
               <h4 className="text-base sm:text-lg font-bold text-white font-mono uppercase">{recapData.headline}</h4>
-              <p className="text-xs text-[#888] font-mono">Генеративная хроника Вайбатона от AI Host</p>
+              <p className="text-xs text-[#8b93ad] font-mono">Генеративная хроника Вайбатона от AI Host</p>
             </div>
           </div>
 
-          <div className="p-5 bg-[#111] rounded-2xl border border-[#262626] text-xs sm:text-sm text-[#DDD] leading-relaxed whitespace-pre-line font-mono">
+          <div className="p-5 bg-[#0e111c] rounded-2xl border border-[#1e2436] text-xs sm:text-sm text-[#e9edf8] leading-relaxed whitespace-pre-line font-mono">
             {recapData.story}
           </div>
 
           {recapData.highlights?.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
               {recapData.highlights.map((h: string, i: number) => (
-                <div key={i} className="p-3 bg-[#111] rounded-xl border border-[#262626] text-xs text-[#AAA] font-mono">
+                <div key={i} className="p-3 bg-[#0e111c] rounded-xl border border-[#1e2436] text-xs text-[#8b93ad] font-mono">
                   ⚡ {h}
                 </div>
               ))}
@@ -265,7 +273,7 @@ export const JudgeDashboard: React.FC = () => {
         <div className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-bold text-white font-mono uppercase">Сданные проекты ({submissions.length})</h3>
-            <span className="text-xs text-[#666] font-mono">Выберите для оценки</span>
+            <span className="text-xs text-[#8b93ad] font-mono">Выберите для оценки</span>
           </div>
 
           {submissions.map((sub) => {
@@ -279,28 +287,28 @@ export const JudgeDashboard: React.FC = () => {
                 onClick={() => setSelectedSubmissionId(sub.id)}
                 className={`p-4 rounded-2xl border cursor-pointer transition-all space-y-2 ${
                   isSelected
-                    ? "bg-[#111] border-[#BAFF00] shadow-[0_0_10px_rgba(186,255,0,0.2)]"
-                    : "bg-[#0A0A0A] border-[#262626] hover:border-[#444]"
+                    ? "bg-[#0e111c] border-[#c8ff3d] shadow-[0_0_12px_rgba(200,255,61,0.2)]"
+                    : "bg-[#0a0c14] border-[#1e2436] hover:border-[#2a3148]"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#151515] text-[#BAFF00] font-bold border border-[#333]">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#121627] text-[#c8ff3d] font-bold border border-[#2a3148]">
                     {sub.teamName}
                   </span>
                   {myJudgement ? (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#BAFF00]/20 text-[#BAFF00] border border-[#BAFF00]/40 flex items-center gap-1">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#c8ff3d]/20 text-[#c8ff3d] border border-[#c8ff3d]/40 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" />
                       Оценено ({myJudgement.totalScore.toFixed(1)}/10)
                     </span>
                   ) : (
-                    <span className="text-[10px] font-mono text-[#666]">
+                    <span className="text-[10px] font-mono text-[#8b93ad]">
                       Оценок: {subJudgements.length}
                     </span>
                   )}
                 </div>
 
                 <h4 className="text-base font-bold text-white font-mono uppercase">{sub.title}</h4>
-                <p className="text-xs text-[#888] line-clamp-2 font-mono">{sub.tagline || sub.description}</p>
+                <p className="text-xs text-[#8b93ad] line-clamp-2 font-mono">{sub.tagline || sub.description}</p>
 
                 <div className="flex items-center gap-2 pt-2 text-xs">
                   <a
@@ -308,18 +316,18 @@ export const JudgeDashboard: React.FC = () => {
                     target="_blank"
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="text-[#BAFF00] hover:underline flex items-center gap-1 font-mono text-[11px]"
+                    className="text-[#c8ff3d] hover:underline flex items-center gap-1 font-mono text-[11px]"
                   >
                     <ExternalLink className="w-3 h-3" />
                     <span>Demo</span>
                   </a>
-                  <span className="text-[#444]">•</span>
+                  <span className="text-[#2a3148]">•</span>
                   <a
                     href={sub.repoUrl}
                     target="_blank"
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="text-[#AAA] hover:underline flex items-center gap-1 font-mono text-[11px]"
+                    className="text-[#8b93ad] hover:underline flex items-center gap-1 font-mono text-[11px]"
                   >
                     <Github className="w-3 h-3" />
                     <span>Repo</span>
@@ -333,14 +341,14 @@ export const JudgeDashboard: React.FC = () => {
         {/* Right 7 Cols: Evaluation Form */}
         <div className="lg:col-span-7">
           {selectedSub ? (
-            <div className="bg-[#0A0A0A] border border-[#333] rounded-3xl p-6 sm:p-8 space-y-6">
+            <div className="bg-[#0a0c14] border border-[#1e2436] rounded-3xl p-6 sm:p-8 space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-mono text-[#BAFF00] uppercase font-bold">ОЦЕНОЧНЫЙ ЛИСТ ЖЮРИ</span>
-                  <span className="text-xs text-[#888] font-mono">Судья: {currentUser?.name || "Эксперт"}</span>
+                  <span className="text-xs font-mono text-[#c8ff3d] uppercase font-bold">ОЦЕНОЧНЫЙ ЛИСТ ЖЮРИ</span>
+                  <span className="text-xs text-[#8b93ad] font-mono">Судья: {currentUser?.name || "Эксперт"}</span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-white font-mono uppercase">{selectedSub.title}</h3>
-                <p className="text-xs text-[#AAA] mt-1 font-mono">{selectedSub.description}</p>
+                <p className="text-xs text-[#8b93ad] mt-1 font-mono">{selectedSub.description}</p>
               </div>
 
               {/* Rubric Sliders */}
@@ -348,13 +356,13 @@ export const JudgeDashboard: React.FC = () => {
                 {criteriaList.map((c) => {
                   const currentVal = scores[c.id] || 8;
                   return (
-                    <div key={c.id} className="bg-[#111] p-4 rounded-2xl border border-[#262626] space-y-2 font-mono">
+                    <div key={c.id} className="bg-[#0e111c] p-4 rounded-2xl border border-[#1e2436] space-y-2 font-mono">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-xs font-bold text-white uppercase">{c.title}</div>
-                          <div className="text-[10px] text-[#888]">{c.desc}</div>
+                          <div className="text-[10px] text-[#8b93ad]">{c.desc}</div>
                         </div>
-                        <div className="w-9 h-9 rounded-xl bg-[#151515] text-[#BAFF00] border border-[#333] flex items-center justify-center font-mono font-bold text-sm">
+                        <div className="w-9 h-9 rounded-xl bg-[#121627] text-[#c8ff3d] border border-[#2a3148] flex items-center justify-center font-mono font-bold text-sm">
                           {currentVal}
                         </div>
                       </div>
@@ -366,9 +374,9 @@ export const JudgeDashboard: React.FC = () => {
                         step={1}
                         value={currentVal}
                         onChange={(e) => handleScoreChange(c.id, Number(e.target.value))}
-                        className="w-full accent-[#BAFF00] cursor-pointer"
+                        className="w-full accent-[#c8ff3d] cursor-pointer"
                       />
-                      <div className="flex justify-between text-[9px] font-mono text-[#666]">
+                      <div className="flex justify-between text-[9px] font-mono text-[#8b93ad]">
                         <span>1 (Слабо)</span>
                         <span>5 (Базово)</span>
                         <span>10 (Идеально)</span>
@@ -378,7 +386,7 @@ export const JudgeDashboard: React.FC = () => {
                 })}
 
                 <div>
-                  <label className="text-xs font-mono text-[#888] uppercase block mb-1">
+                  <label className="text-xs font-mono text-[#8b93ad] uppercase block mb-1">
                     Комментарий и фидбек команде *
                   </label>
                   <textarea
@@ -386,14 +394,14 @@ export const JudgeDashboard: React.FC = () => {
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
                     placeholder="Напишите сильные стороны проекта и рекомендации..."
-                    className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-xs text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#BAFF00] resize-none"
+                    className="w-full bg-[#0e111c] border border-[#2a3148] rounded-xl p-3 text-xs text-white placeholder-[#555] font-mono focus:outline-none focus:border-[#c8ff3d] resize-none"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmittingScore}
-                  className="w-full py-3 rounded-xl bg-[#BAFF00] hover:bg-[#d4ff33] text-black font-bold font-mono uppercase text-xs shadow-[0_0_12px_rgba(186,255,0,0.3)] flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3 rounded-xl bg-[#c8ff3d] hover:bg-[#d8ff5e] text-[#06070c] font-black font-mono uppercase text-xs shadow-[0_0_15px_rgba(200,255,61,0.3)] flex items-center justify-center gap-2 transition-all"
                 >
                   <FileCheck className="w-4 h-4" />
                   <span>Сохранить оценку и отправить фидбек</span>
@@ -401,7 +409,7 @@ export const JudgeDashboard: React.FC = () => {
               </form>
             </div>
           ) : (
-            <div className="p-12 text-center bg-[#0A0A0A] rounded-3xl border border-[#333] text-[#666] font-mono">
+            <div className="p-12 text-center bg-[#0a0c14] rounded-3xl border border-[#1e2436] text-[#8b93ad] font-mono">
               Нет доступных работ для оценки
             </div>
           )}

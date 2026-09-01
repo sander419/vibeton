@@ -1,72 +1,120 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --bg: #F8F7F4;
+    --bg-card: #FFFFFF;
+    --bg-muted: #EFECE6;
+    --bg-dark: #1A1A1A;
+    --ink: #1A1A1A;
+    --ink-muted: #666666;
+    --ink-light: #999999;
+    --border: #1A1A1A;
+    --border-light: #D5D2CA;
+    --accent: #E63946;
+    --accent-hover: #D02B38;
+    --blue: #0F4C81;
+    --green: #2A9D8F;
+    --amber: #E76F51;
+  }
+
   * {
-    border-color: #333333;
+    border-color: var(--border);
   }
   
   body {
-    background-color: #0A0A0A;
-    color: #E0E0E0;
+    background-color: var(--bg);
+    color: var(--ink);
     overflow-x: hidden;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Space Mono', 'JetBrains Mono', monospace;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+    background-image: 
+      linear-gradient(rgba(26, 26, 26, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26, 26, 26, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 }
 
-/* Custom scrollbars */
+.font-display {
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.font-mono {
+  font-family: 'Space Mono', 'JetBrains Mono', monospace;
+}
+
+.font-body {
+  font-family: 'Space Mono', monospace;
+}
+
+/* Industrial label */
+.label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink);
+  opacity: 0.65;
+  font-weight: 700;
+}
+
+.accent-text {
+  color: var(--accent);
+}
+
+/* Custom crisp scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0A0A0A;
+  background: #F8F7F4;
 }
 ::-webkit-scrollbar-thumb {
-  background: #333333;
+  background: #1A1A1A;
   border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #BAFF00;
+  background: #E63946;
 }
 
-/* Artistic Flair Acid Glow effects */
-.glow-acid {
-  box-shadow: 0 0 20px rgba(186, 255, 0, 0.3);
+/* Sound Wave animation */
+.wave-bar {
+  animation: waveBar 1s infinite ease-in-out;
+}
+@keyframes waveBar {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
 }
 
-.glow-acid-sm {
-  box-shadow: 0 0 8px #BAFF00;
+/* Ticker marquee animation */
+@keyframes tickerSlide {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-ticker {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: tickerSlide 36s linear infinite;
+}
+.animate-ticker:hover {
+  animation-play-state: paused;
 }
 
-.glow-acid-box {
-  box-shadow: 0 0 25px -5px rgba(186, 255, 0, 0.25);
+/* Industrial Pulse */
+@keyframes indPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.animate-ind-pulse {
+  animation: indPulse 2s infinite ease-in-out;
 }
 
-.glow-subtle {
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
-}
-
-@keyframes pulse-acid {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px #BAFF00); }
-  50% { opacity: 0.7; filter: drop-shadow(0 0 2px #BAFF00); }
-}
-
-.animate-pulse-acid {
-  animation: pulse-acid 2s ease-in-out infinite;
-}
-
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 20s linear infinite;
-}
-
-.grid-bg {
-  background-size: 24px 24px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-}
